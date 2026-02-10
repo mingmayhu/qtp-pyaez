@@ -329,7 +329,7 @@ class ThermalScreening(object):
                                 [f1, thermal_screening_f])
 
                     # """For calculated value beyond sub-optimum/not-suitable, use previous linear interpolation (But not sure)"""
-                        elif self.calc_value > self.sub_optimal[i]:
+                        elif self.calc_value[i] > self.sub_optimal[i]:
                             f1 = 0
                             thermal_screening_f = np.min(
                                 [f1, thermal_screening_f])
