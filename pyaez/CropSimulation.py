@@ -108,7 +108,7 @@ class CropSimulation(object):
 
         self.set_monthly=True
 
-    def setDailyClimateData(self, min_temp, max_temp, precipitation, short_rad, wind_speed, rel_humidity):
+    def setDailyClimateData(self, min_temp, max_temp, precipitation, short_rad, wind_speed, rel_humidity, mean_temp):
         """Load DAILY climate data into the Class and calculate the Reference Evapotranspiration (ETo)
 
         Args:
@@ -132,7 +132,7 @@ class CropSimulation(object):
         self.wind2m_daily = wind_speed
         self.rel_humidity_daily = rel_humidity
 
-        self.meanT_daily = np.zeros((self.im_height, self.im_width, 365))
+        self.meanT_daily = mean_temp
         self.totalPrec_daily = np.zeros((self.im_height, self.im_width, 365))
         self.pet_daily = np.zeros((self.im_height, self.im_width, 365))
 
@@ -166,6 +166,19 @@ class CropSimulation(object):
         self.P_by_PET_daily = np.divide(
             self.totalPrec_daily, self.pet_daily, out=np.zeros_like(self.totalPrec_daily), where=(self.pet_daily != 0))
         self.set_monthly = False
+
+    def setPermafrostData(self, active_layer_thickness, soil_moisture):
+        """Load permafrost data into the Class
+
+        Args:
+            active_layer_thickness (3D NumPy): Daily active layer thickness [m]
+            soil_moisture (3D NumPy): Daily soil moisture [mm/m]
+        Return:
+            None.
+        """
+        self.alt_daily = active_layer_thickness
+        self.soil_moisture_daily = soil_moisture
+
 
     def setLocationTerrainData(self, lat_min, lat_max, elevation):
         """Load geographical extents and elevation data in to the Class, 
@@ -834,6 +847,8 @@ class CropSimulation(object):
                         self.totalPrec_monthly[i_row, i_col, :],  1, days_in_year, no_minus_values=True)
                     rel_humidity_daily_point = obj_utilities.interpMonthlyToDaily(
                         self.rel_humidity_monthly[i_row, i_col, :],  1, days_in_year, no_minus_values=True)
+                    alt_daily_point = self.alt_daily[i_row, i_col, :]
+                    soil_moisture_daily_point = self.soil_moisture_daily[i_row, i_col, :]
                 else:
                     minT_daily_point = self.minT_daily[i_row, i_col, :]
                     maxT_daily_point = self.maxT_daily[i_row, i_col, :]
@@ -841,6 +856,8 @@ class CropSimulation(object):
                     wind2m_daily_point = self.wind2m_daily[i_row, i_col, :]
                     totalPrec_daily_point = self.totalPrec_daily[i_row, i_col, :]
                     rel_humidity_daily_point = self.rel_humidity_daily[i_row, i_col, :]
+                    alt_daily_point = self.alt_daily[i_row, i_col, :]
+                    soil_moisture_daily_point = self.soil_moisture_daily[i_row, i_col, :]
                     
 
                 # calculate ETO for full year for particular location (pixel) 7#
@@ -893,6 +910,8 @@ class CropSimulation(object):
                     wind2m_daily_2year = np.tile(wind2m_daily_point,2)
                     totalPrec_daily_2year = np.tile(totalPrec_daily_point, 2)
                     pet_daily_2year = np.tile(pet_daily_point, 2)
+                    alt_daily_2year = np.tile(alt_daily_point, 2)
+                    soil_moisture_2year = np.tile(soil_moisture_daily_point, 2)
                     
                     if self.cycle_len_rain in[-1,0]:
                         est_yield_moisture_limited = 0.
@@ -915,6 +934,10 @@ class CropSimulation(object):
                             i_cycle: i_cycle+int(self.cycle_len_rain)-1]
                         wind_sp_daily_season_rain = wind2m_daily_2year[
                             i_cycle: i_cycle+int(self.cycle_len_rain)-1]
+                        alt_daily_season_rain = alt_daily_2year[
+                            i_cycle: i_cycle+int(self.cycle_len_rain)-1]
+                        soil_moisture_daily_season_rain = soil_moisture_2year[
+                             i_cycle - 1: i_cycle + int(self.cycle_len_rain) - 2] # OFFSET BY 1 DAY
                         
                         """Creating Thermal Screening object classes for perennial RAINFED conditions"""
                         obj_screening_rain = ThermalScreening.ThermalScreening()
@@ -974,7 +997,7 @@ class CropSimulation(object):
                                 i_cycle+1, i_cycle+1+self.cycle_len_rain-1, perennial_flag = self.perennial)
                             obj_cropwat.setClimateData(
                                 pet_daily_season_rain, totalPrec_daily_season_rain, wind_sp_daily_season_rain, 
-                                minT_daily_season_rain, maxT_daily_season_rain)
+                                minT_daily_season_rain, maxT_daily_season_rain, alt_daily_season_rain, soil_moisture_daily_season_rain)
                             
                             # check Sa is a raster or single value and extract Sa value accordingly
                             if len(np.array(self.Sa).shape) == 2:
@@ -983,6 +1006,7 @@ class CropSimulation(object):
                                 Sa_temp = self.Sa
                             obj_cropwat.setCropParameters(self.d_per, self.kc, self.kc_all, self.yloss_f,
                                                             self.yloss_f_all, est_yield_rainfed, self.D1, self.D2, Sa_temp, self.pc, self.plant_height)
+                            #est_yield_moisture_limited = obj_cropwat.calculateMoistureLimitedYieldNew()
                             est_yield_moisture_limited = obj_cropwat.calculateMoistureLimitedYield()
 
                             fc2_value = obj_cropwat.getfc2factormap()

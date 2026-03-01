@@ -76,8 +76,10 @@ class TerrainConstraints(object):
         sum_Psquare = np.sum(np.square(self.prec_monthly), axis=2)
         sum_P = np.sum(self.prec_monthly, axis=2)
 
-        self.FI = np.multiply(12, (sum_Psquare / sum_P), where= sum_P !=0)
-        self.FI[np.isnan(self.FI)] = 0 # This suppresses warning with NaN values
+        # self.FI = np.multiply(12, (sum_Psquare / sum_P), where= sum_P !=0)
+        # self.FI[np.isnan(self.FI)] = 0 # This suppresses warning with NaN values
+        self.FI = np.zeros((self.im_height, self.im_width))
+        np.multiply(12, (sum_Psquare / sum_P), where=sum_P != 0, out=self.FI)
 
     def getFI(self):
         """Getting the result of Fournier Index.

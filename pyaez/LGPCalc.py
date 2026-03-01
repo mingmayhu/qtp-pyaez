@@ -105,6 +105,55 @@ def eta(wb_old, etm, Sa, D, p, rain):
     return wb, wx, eta
 
 
+
+@jit(nopython=True)
+def newEta(wb_old, etm, Sa, D, p, rain, soil_moisture, active_layer_depth):
+    # HAVE TO RETHINK THIS IN TERMS OF TIMING...
+    """SUBROUTINE: Calculate actual evapotranspiration (ETa) 
+
+    Args:
+        wb_old (float): daily water balance left from the previous day
+        etm (float): maximum evapotranspiration
+        Sa (float): Available soil moisture holding capacity [mm/m]
+        D (float): rooting depth [m]
+        p (float): soil moisture depletion fraction (0-1)
+        rain (float): amount of rainfall
+
+
+    Returns:
+        float: a value for daily water balance
+        float: a value for total available soil moisture
+        float: the calculated actual evapotranspiration
+    """
+    s = wb_old+rain
+    wx = 0
+    Salim = max(salimCalc(Sa, D, active_layer_depth), 1.)
+    wr=min(100*(1-p),Salim)
+
+    if rain >= etm:
+        eta = etm
+    elif s-wr >= etm:
+        eta = etm
+    else:
+        rho = wb_old/wr
+        eta = min(rain + rho*etm, etm)
+
+    #wb=s-eta
+    wb=waterBalance(soil_moisture, active_layer_depth)
+
+    if wb >= Salim:
+        wx = wb-Salim
+        wb = Salim
+    else:
+        wx = 0
+
+    
+    if wb < 0:
+        wb=0
+
+    return wb, wx, eta
+
+
 @jit(nopython=True)
 def psh(ng, et0):
     """Calculate soil moisture depletion fraction (0-1)
@@ -163,6 +212,66 @@ def val10day(Et):
 
     return np.array(moving_averages)
 
+@jit(nopython=True)
+def salimCalc(Sa, D, active_layer_depth):
+    """Calculate total available soil moisture
+
+    Args:
+        Sa (float): Available soil moisture holding capacity [mm/m]
+        D (float): rooting depth [m]
+        active_layer_depth (int): active layer depth in terms of layer number (0-10)
+
+    Returns:
+        float: total available soil moisture
+    """
+    layer_depths = [0.01, 0.045, 0.1, 0.18, 0.31, 0.525, 0.885, 1.475, 2.295, 2.75]
+    active_layer_m = layer_depths[active_layer_depth-1] if active_layer_depth > 0 else 0
+    max_depth = min(D, active_layer_m)
+    Salim = Sa*max_depth
+    return Salim
+
+@jit(nopython=True)
+def activeLayer(soil_temperature):
+    """Calculate active layer depth in terms of number of non-frozen layers (up to 10)
+    Args:
+        soil_temperature (1D NumPy): daily soil temperature for the pixel for each layer (10 layers in total)
+    Returns:
+        int: active layer depth in terms of layer number (0-10)
+    """
+    active_layer_depth = 0
+    for layer_temp in soil_temperature:
+        # if soil layer is not frozen, increase active layer depth by 1
+        if layer_temp > 0:
+            active_layer_depth += 1
+        # if soil layer is frozen, stop counting further layers
+        else:
+            break
+
+    return active_layer_depth
+
+@jit(nopython=True)
+def waterBalance(soil_moisture, active_layer_depth):
+    """
+    Calculate total soil moisture in active layer (mm)
+
+    Args:
+        soil_moisture (1D array): volumetric water content (m3/m3), 10 layers
+        active_layer_depth (int): number of active (thawed) layers (1–10)
+
+    Returns:
+        float: total soil moisture in active layer (mm)
+    """
+
+    # SHAW layer thicknesses (m)
+    layer_thickness = [0.01, 0.035, 0.055, 0.08, 0.13, 0.215, 0.36, 0.59, 0.795, 0.43]
+
+    total_soil_moisture = 0.0
+
+    for i in range(active_layer_depth):
+        total_soil_moisture += soil_moisture[i] * layer_thickness[i] * 1000.0
+
+    return total_soil_moisture
+
 
 @jit(nopython=True)
 def EtaCalc(Tx365, Ta365, Pcp365, Txsnm, Fsnm, Eto365, wb_old, sb_old, doy, istart0, istart1, Sa, D, p, kc_list, lgpt5_point):
@@ -203,8 +312,9 @@ def EtaCalc(Tx365, Ta365, Pcp365, Txsnm, Fsnm, Eto365, wb_old, sb_old, doy, ista
 
         sbx = sb_old+Pcp365
 
+        #TODO: Change wb
         wb, wx, Eta = eta(wb_old-Pcp365, etm, Sa, D, p, Pcp365)
-
+        #TODO: Change Salim
         Salim = Sa*D  
 
         if sbx >= etm:
@@ -212,6 +322,7 @@ def EtaCalc(Tx365, Ta365, Pcp365, Txsnm, Fsnm, Eto365, wb_old, sb_old, doy, ista
             Eta365 = etm
 
             wb=wb_old-etm
+            # confused here
             if wb > Salim:
                 wx = wb- Salim 
                 wb = Salim
@@ -236,10 +347,12 @@ def EtaCalc(Tx365, Ta365, Pcp365, Txsnm, Fsnm, Eto365, wb_old, sb_old, doy, ista
         # Snow-melt function
         snm = min(Fsnm*(Tx365-Txsnm), sb_old)
         sbx = sb_old - snm 
+        # TODO: Change Salim
         Salim = Sa*D
         if sbx >= etm:
             Sb365 = sbx-etm
             Eta365 = etm
+            # TODO: Change Wb
             wb = wb_old+snm+Pcp365-etm
 
             if wb > Salim:
@@ -248,6 +361,7 @@ def EtaCalc(Tx365, Ta365, Pcp365, Txsnm, Fsnm, Eto365, wb_old, sb_old, doy, ista
             else:
                 wx = 0
         else:
+            # TODO: Change Wb
             Sb365 = 0.
             wb, wx, Eta = eta(wb_old+snm, etm, Sa, D, p, Pcp365)
             Eta365 = Eta
@@ -272,6 +386,7 @@ def EtaCalc(Tx365, Ta365, Pcp365, Txsnm, Fsnm, Eto365, wb_old, sb_old, doy, ista
 
         sbx = sb_old-snm
 
+        # TODO: Change WB
         wb, wx, Eta = eta(wb_old+snm, etm, Sa, D, p, Pcp365)
 
         if Eta > Etm365:
@@ -338,9 +453,87 @@ def EtaCalc(Tx365, Ta365, Pcp365, Txsnm, Fsnm, Eto365, wb_old, sb_old, doy, ista
         Wx365 = wx
         Sb365 = sbx
         kc365 = kc_list[4]
+    
+    # print(Wb365)
 
     return Eta365, Etm365, Wb365, Wx365, Sb365, kc365
 
+@jit(nopython=True)
+def NewEtaCalc(Tx365, Ta365, Pcp365, Txsnm, Fsnm, Eto365, wb_old, sb_old, doy, istart0, istart1, Sa, D, p, kc_list, lgpt5_point):
+    """Calculate actual evapotranspiration (ETa)
+        This is a Numba routine, which means all the arguments are a single element -- not an array. 
+    Args:
+        Tx365 (float): a daily value of maximum temperature
+        Ta365 (float): a daily value of average temperature
+        Pcp365 (float): a daily value of precipitation
+        Txsnm (float): the maximum temperature threshold, underwhich precip. falls as snow
+        Fsnm (float): snow melt parameter
+        Eto365 (float): a daily value of reference evapotranspiration
+        wb_old (float): water bucket value from the previous day
+        sb_old (float): snow bucket value from the previous day
+        doy (int): day of year
+        istart0 (int): the starting date of the growing period
+        istart1 (int): the ending date of the growing period
+        Sa (int): total available soil water holding capacity
+        D (int): rooting depth
+        p (int): the share of exess water, below which soil moisture starts to become difficult to extract
+        kc_list (list): crop coefficients for water requirements
+        lgpt5_point (float): numbers of days with mean daily tenmperature above 5 degC
+
+    Returns:
+        Eta365 (float): a daily value of the 'Actual Evapotranspiration' (mm)
+        Etm365 (float): a daily value of the 'Maximum Evapotranspiration' (mm)
+        Wb365 (float): a daily value of the 'Soil Water Balance'
+        Wx365 (float): a daily value of the 'Maximum water available to plants'
+        Sb365 (float): a daily value of the 'Snow balance' (mm)
+        kc365 (float): a daily value of the 'crop coefficients for water requirements'
+    """
+
+
+    # Period with Tmax <= Txsnm (precipitaton falls as snow as is added to snow bucket)
+    if Tx365 <= Txsnm and Ta365 <= 0.:
+        etm = kc_list[0] * Eto365
+
+        Etm365 = etm
+        kc365 = kc_list[0]
+
+    # Snow-melt takes place; minor evapotranspiration
+    elif Ta365 <= 0. and Tx365 >= 0.:
+        etm = kc_list[1] * Eto365
+        Etm365 = etm
+        kc365 = kc_list[1]
+
+    elif Ta365 < 5. and Ta365 > 0.:
+        # Biological activities before start of growing period
+        etm = kc_list[2] * Eto365
+        Etm365 = etm
+
+        kc365 = kc_list[2]
+
+    elif lgpt5_point < 365 and Ta365 >= 5.:
+        if doy >= istart0 and doy <= istart1:
+            # case 2 -- kc increases from 0.5 to 1.0 during first month of LGP
+            # case 3 -- kc = 1 until daily Ta falls below 5C
+            xx = min((doy-istart0)/30., 1.)
+            kc = kc_list[3]*(1.-xx)+(kc_list[4]*xx)
+        else:
+            # case 1 -- kc=0.5 for days until start of growing period
+            kc = kc_list[3]
+
+        etm = kc * Eto365
+        Etm365 = etm
+       
+        kc365 = kc
+
+    else:
+        etm = kc_list[4] * Eto365
+        Etm365 = etm
+    
+        kc365 = kc_list[4]
+    
+    # print(Wb365)
+
+    return Etm365, kc365
 
 @jit(nopython=True)
 def setdat(dat1):

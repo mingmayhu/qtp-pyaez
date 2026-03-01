@@ -1,0 +1,502 @@
+"""
+PyAEZ Pipeline — Modules 1, 2, 4, 5
+Outer loop: crops
+Inner loop: years (1979–2018)
+
+Module 1 outputs (tclimate, tzone) are computed once from the multi-year
+average and reused across all crops and years.
+Per-year Module 1 indicators are also computed once and cached on disk,
+then read back by Modules 2, 4, and 5.
+"""
+
+# =============================================================================
+# CONFIGURATION
+# =============================================================================
+
+WORK_DIR   = r'/Users/ming-mayhu/Desktop/毕业论文/qtp-pyaez/qtp_pyaez'
+## TODO: make avg_period based on the year in the loop
+YEARS      = list(range(2013, 2019))
+AVG_PERIOD = '1979-1998'
+
+# Geographic extents
+LAT_MIN    = 35.921391739
+LAT_MAX    = 39.721391739
+MASK_VALUE = 0
+
+# LGP water balance parameters
+SA = 100.
+D  = 1.
+
+# --- Crops -------------------------------------------------------------------
+# Add or remove dicts to change which crops are processed.
+# Each dict must have:
+#   label           : folder name used in outputs
+#   crop_name       : name passed to readCropandCropCycleParameters
+#   crop_excel      : path to crop/tsum parameter xlsx
+#   crop_rule_excel : path to crop-specific rule xlsx
+#   soil_rain_excel : path to soil reduction xlsx (rainfed)
+#   terrain_excel   : path to terrain reduction xlsx
+#   no_t_climate    : list of thermal climate classes to screen out
+# -----------------------------------------------------------------------------
+CROPS = [
+    {
+        'label'          : 'winter_barley',
+        'crop_name'      : 'winter_barley_59',
+        'crop_excel'     : r'./data_input/crop_inputs/input_crop_tsum_parameters.xlsx',
+        'crop_rule_excel': r'./data_input/crop_inputs/crop_specific_rule.xlsx',
+        'soil_rain_excel': r'./data_input/soil_inputs/winter_barley_soil.xlsx',
+        'terrain_excel'  : r'./data_input/terrain/barley_terrain.xlsx',
+        'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    },
+    # {
+    #     'label'          : 'spring_wheat',
+    #     'crop_name'      : 'spring_wheat_xx',
+    #     'crop_excel'     : r'./data_input/crop_inputs/input_crop_tsum_parameters.xlsx',
+    #     'crop_rule_excel': r'./data_input/crop_inputs/crop_specific_rule.xlsx',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/spring_wheat_soil.xlsx',
+    #     'terrain_excel'  : r'./data_input/terrain/wheat_terrain.xlsx',
+    #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    # },
+]
+
+# --- Shared input paths ------------------------------------------------------
+MASK_PATH   = r'./data_input/qilian mask.tif'
+BASEPATH    = r'./data_input/qilian mask.tif'
+SOIL_MAP    = r'./data_input/hwsd.tif'
+SLOPE_PATH  = r'/data_input/terrain/slope.tif'
+SOIL_TOPSOIL = r'./data_input/soil_inputs/qtp_topsoil.xlsx'
+SOIL_SUBSOIL = r'./data_input/soil_inputs/qtp_subsoil.xlsx'
+SOIL_INPUT_LEVEL = 'L'   # L: Low, I: Intermediate, H: High
+
+# =============================================================================
+# IMPORTS
+# =============================================================================
+
+import os
+import sys
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import pandas as pd
+
+try:
+    from osgeo import gdal
+except ImportError:
+    import gdal
+
+os.chdir(WORK_DIR)
+sys.path.insert(0, os.path.dirname(WORK_DIR))
+
+from pyaez import ClimateRegime, CropSimulation, SoilConstraints, TerrainConstraints, UtilitiesCalc
+
+obj_util = UtilitiesCalc.UtilitiesCalc()
+
+
+# =============================================================================
+# HELPERS
+# =============================================================================
+
+def make_dirs(*paths):
+    for p in paths:
+        os.makedirs(p, exist_ok=True)
+
+def load_climate(year):
+    import calendar
+    d = f'data_input/climate_yearly/{year}'
+    p = f'data_input/permafrost_yearly/{year}'
+
+    data = {
+        'max_temp'  : np.load(f'{d}/TempMax.npy'),
+        'min_temp'  : np.load(f'{d}/TempMin.npy'),
+        'precip'    : np.load(f'{d}/Precip.npy'),
+        'rh'        : np.load(f'{d}/RH.npy'),
+        'wind'      : np.load(f'{d}/Wind.npy'),
+        'rad'       : np.load(f'{d}/Radiation.npy'),
+        'mean_temp' : np.load(f'{d}/TempMean.npy'),
+        'eta'       : np.load(f'{p}/ET.npy'),
+        'alt'       : np.load(f'{p}/active_layer_depth.npy'),
+        'soil_moist': np.load(f'{p}/avail_soil_moisture.npy'),
+    }
+
+    # Remove Feb 29 (day index 59, 0-based) for leap years
+    if calendar.isleap(year):
+        data = {k: np.delete(v, 59, axis=2) if v.ndim == 3 else v 
+                for k, v in data.items()}
+
+    return data
+
+# =============================================================================
+# MODULE 1 — PER-YEAR INDICATORS
+# =============================================================================
+
+def run_module1_year(year, mask, elevation, tclimate, tzone, clim):
+    """
+    Compute and save all per-year Module 1 indicators.
+    Returns dict with lgp, lgpt5, lgpt10, tsum0, tsum10 arrays (needed downstream).
+    """
+    print(f"  [Module 1 | {year}] Computing per-year indicators …")
+    out_dir = f'./data_output/module1/{year}'
+    make_dirs(out_dir)
+
+    tile_list = ['A9','A8','A7','A6','A5','A4','A3','A2',
+                 'A1','B1','B2','B3','B4','B5','B6','B7','B8','B9']
+
+    cr = ClimateRegime.ClimateRegime()
+    cr.setStudyAreaMask(mask, MASK_VALUE)
+    cr.setLocationTerrainData(LAT_MIN, LAT_MAX, elevation)
+    cr.setDailyClimateData(
+        clim['min_temp'], clim['max_temp'], clim['precip'],
+        clim['rad'], clim['wind'], clim['rh']
+    )
+    cr.setDailyPermafrostData(clim['eta'])
+
+    # -- Thermal LGPs --
+    lgpt0  = cr.getThermalLGP0()
+    lgpt5  = cr.getThermalLGP5()
+    lgpt10 = cr.getThermalLGP10()
+
+    plt.figure(figsize=(24, 8))
+    for i, (arr, lbl) in enumerate(zip([lgpt0, lgpt5, lgpt10],
+                                        ['LGPt 0', 'LGPt 5', 'LGPt 10']), start=1):
+        plt.subplot(1, 3, i)
+        plt.imshow(arr, vmin=0, vmax=366)
+        plt.title(lbl); plt.colorbar(shrink=0.8)
+    plt.savefig(f'{out_dir}/thermalLGPs.png', bbox_inches='tight', dpi=150)
+    plt.close()
+    obj_util.saveRaster(MASK_PATH, f'{out_dir}/LGPt0.tif',  lgpt0)
+    obj_util.saveRaster(MASK_PATH, f'{out_dir}/LGPt5.tif',  lgpt5)
+    obj_util.saveRaster(MASK_PATH, f'{out_dir}/LGPt10.tif', lgpt10)
+
+    # -- Temperature Sums --
+    tsum0  = cr.getTemperatureSum0()
+    tsum5  = cr.getTemperatureSum5()
+    tsum10 = cr.getTemperatureSum10()
+
+    plt.figure(figsize=(24, 8))
+    for i, (arr, lbl) in enumerate(zip([tsum0, tsum5, tsum10],
+                                        ['T-sum 0', 'T-sum 5', 'T-sum 10']), start=1):
+        plt.subplot(1, 3, i)
+        plt.imshow(arr, cmap='hot_r', vmin=0, vmax=11000)
+        plt.title(lbl); plt.colorbar(shrink=0.8)
+    plt.savefig(f'{out_dir}/Tsum.png', bbox_inches='tight', dpi=150)
+    plt.close()
+    obj_util.saveRaster(MASK_PATH, f'{out_dir}/tsum0.tif',  tsum0)
+    obj_util.saveRaster(MASK_PATH, f'{out_dir}/tsum5.tif',  tsum5)
+    obj_util.saveRaster(MASK_PATH, f'{out_dir}/tsum10.tif', tsum10)
+
+    # -- Temperature Profile --
+    tprofile = cr.getTemperatureProfile()
+    fig = plt.figure(figsize=(12, 20))
+    for i in range(1, 19):
+        plt.subplot(6, 3, i)
+        plt.imshow(tprofile[i - 1])
+        plt.title(tile_list[i - 1]); plt.colorbar(shrink=0.9)
+    plt.tight_layout()
+    plt.savefig(f'{out_dir}/Tprofiles.png', bbox_inches='tight', dpi=150)
+    plt.close()
+    for i in range(18):
+        obj_util.saveRaster(MASK_PATH, f'{out_dir}/TProfile_{tile_list[i]}.tif', tprofile[i])
+
+    # -- LGP (water-balance) --
+    lgp      = cr.getNewLGP(Sa=SA, D=D)
+    lgp_equv = cr.getLGPEquivalent()
+
+    for arr, fname, title in [
+        (lgp,      'LGP New',      'LGP [days]'),
+        (lgp_equv, 'LGP_Equv New', 'LGP Equivalent [days]'),
+    ]:
+        plt.imshow(arr, cmap='viridis', vmin=0, vmax=366)
+        plt.title(title); plt.colorbar()
+        plt.savefig(f'{out_dir}/{fname}.png', bbox_inches='tight', dpi=150)
+        plt.close()
+        obj_util.saveRaster(MASK_PATH, f'{out_dir}/{fname}.tif', arr)
+
+    # -- Multi-Cropping Zone --
+    multi_crop        = cr.getMultiCroppingZones(tclimate, lgp, lgpt5, lgpt10, tsum0, tsum10)
+    multi_crop_rain   = multi_crop[0]
+    plt.imshow(multi_crop_rain, cmap=plt.get_cmap('gist_ncar_r', 9), vmin=-0.2, vmax=8.4)
+    plt.title('Multi Cropping Zone - RAINFED'); plt.colorbar()
+    plt.savefig(f'{out_dir}/multicrop_rain.png', bbox_inches='tight', dpi=150)
+    plt.close()
+    obj_util.saveRaster(MASK_PATH, f'{out_dir}/multicrop_rain.tif', multi_crop_rain)
+
+    # -- Fallow Requirement --
+    tzone_fallow = cr.TZoneFallowRequirement(tzone)
+    plt.imshow(tzone_fallow, cmap=plt.get_cmap('tab10', 7), vmin=-0.5, vmax=6.3)
+    plt.title('Fallow Requirement'); plt.colorbar()
+    plt.savefig(f'{out_dir}/fallow.png', bbox_inches='tight', dpi=150)
+    plt.close()
+    obj_util.saveRaster(MASK_PATH, f'{out_dir}/fallow.tif', tzone_fallow)
+
+    print(f"    ✓ Module 1 outputs saved to {out_dir}")
+    return {'lgp': lgp, 'lgpt5': lgpt5, 'lgpt10': lgpt10,
+            'tsum0': tsum0, 'tsum10': tsum10}
+
+
+# =============================================================================
+# MODULE 2 — CROP SIMULATION
+# =============================================================================
+
+def run_module2(year, crop, mask, elevation, clim, tclimate, m1, permafrost_class):
+    """
+    Run crop simulation for one crop and one year.
+    Returns (yield_map_rain, starting_date_rain).
+    m1: dict returned by run_module1_year (lgp, lgpt5, lgpt10, tsum0, tsum10)
+    """
+    print(f"  [Module 2 | {year} | {crop['label']}] Crop simulation …")
+    out_dir = f'./data_output/module2/{crop["label"]}/{year}'
+    make_dirs(out_dir)
+
+    aez = CropSimulation.CropSimulation()
+    aez.setStudyAreaMask(mask, MASK_VALUE)
+    aez.setLocationTerrainData(LAT_MIN, LAT_MAX, elevation)
+    aez.setDailyClimateData(
+        clim['min_temp'], clim['max_temp'], clim['precip'],
+        clim['rad'], clim['wind'], clim['rh']
+    )
+    aez.setPermafrostData(clim['alt'], clim['soil_moist'])
+
+    aez.readCropandCropCycleParameters(
+        file_path=crop['crop_excel'],
+        crop_name=crop['crop_name']
+    )
+    aez.setSoilWaterParameters(Sa=100 * np.ones(mask.shape), pc=0.5)
+    aez.setThermalClimateScreening(tclimate, no_t_climate=crop['no_t_climate'])
+    aez.setPermafrostScreening(permafrost_class=permafrost_class)
+    aez.setCropSpecificRule(
+        file_path=crop['crop_rule_excel'],
+        crop_name=crop['crop_name']
+    )
+    aez.ImportLGPandLGPT(lgp=m1['lgp'], lgpt5=m1['lgpt5'], lgpt10=m1['lgpt10'])
+
+    aez.simulateCropCycle(start_doy=1, end_doy=365, step_doy=1, leap_year=False)
+
+    yield_map_rain    = aez.getEstimatedYieldRainfed()
+    starting_date_rain = aez.getOptimumCycleStartDateRainfed()
+    fc1_rain          = aez.getThermalReductionFactor()[0]
+    fc2               = aez.getMoistureReductionFactor()
+
+    # -- Plots --
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    im0 = axes[0].imshow(yield_map_rain, vmin=0, vmax=np.max(yield_map_rain))
+    axes[0].set_title('Rainfed Yield'); plt.colorbar(im0, ax=axes[0])
+    im1 = axes[1].imshow(starting_date_rain, vmin=0, vmax=366)
+    axes[1].set_title('Starting Date Rainfed'); plt.colorbar(im1, ax=axes[1])
+    plt.tight_layout()
+    plt.savefig(f'{out_dir}/yield_and_start.png', bbox_inches='tight', dpi=150)
+    plt.close()
+
+    plt.imshow(fc1_rain, vmin=0, vmax=1); plt.colorbar()
+    plt.title('Fc1 Rainfed')
+    plt.savefig(f'{out_dir}/fc1_rain.png', bbox_inches='tight', dpi=150)
+    plt.close()
+
+    plt.imshow(fc2, vmin=0, vmax=1); plt.colorbar()
+    plt.title('Fc2 Moisture Reduction')
+    plt.savefig(f'{out_dir}/fc2_rain.png', bbox_inches='tight', dpi=150)
+    plt.close()
+
+    # -- Save rasters --
+    obj_util.saveRaster(MASK_PATH, f'{out_dir}/yield_map_rain.tif',    yield_map_rain)
+    obj_util.saveRaster(MASK_PATH, f'{out_dir}/starting_date_rain.tif', starting_date_rain)
+    obj_util.saveRaster(MASK_PATH, f'{out_dir}/fc1_rain.tif',          fc1_rain)
+    obj_util.saveRaster(MASK_PATH, f'{out_dir}/fc2_rain.tif',          fc2)
+
+    print(f"    ✓ Module 2 outputs saved to {out_dir}")
+    return yield_map_rain, starting_date_rain
+
+
+# =============================================================================
+# MODULE 4 — SOIL CONSTRAINTS
+# =============================================================================
+
+def run_module4(year, crop, yield_map_rain):
+    """
+    Apply soil constraints to rainfed yield.
+    Returns yield_map_rain_m4.
+    """
+    print(f"  [Module 4 | {year} | {crop['label']}] Soil constraints …")
+    out_dir = f'./data_output/module4/{crop["label"]}/{year}'
+    make_dirs(out_dir)
+
+    soil_map = gdal.Open(SOIL_MAP).ReadAsArray()
+
+    soc_np = np.stack([
+        np.load(f'./data_input/soc/soc_pct_d{i}.npy') for i in range(1, 8)
+    ], axis=2)
+
+    sc = SoilConstraints.SoilConstraints()
+    sc.importSoilReductionSheet(
+        rain_sheet_path=crop['soil_rain_excel'],
+        irr_sheet_path=crop['soil_rain_excel']
+    )
+    sc.calculateSoilQualities(
+        irr_or_rain='R',
+        topsoil_path=SOIL_TOPSOIL,
+        subsoil_path=SOIL_SUBSOIL,
+        soc=soc_np,
+        soil_map=soil_map
+    )
+    sc.calculateSoilRatings(SOIL_INPUT_LEVEL)
+
+    yield_map_rain_m4 = sc.applySoilConstraints(yield_map_rain)
+    yield_map_class   = obj_util.classifyFinalYield(yield_map_rain_m4)
+    fc4_rain          = sc.getSoilSuitabilityMap()
+
+    # -- Plots --
+    fig, axes = plt.subplots(1, 3, figsize=(25, 9))
+    for ax, arr, title, vmax in zip(
+        axes,
+        [yield_map_rain, yield_map_rain_m4, fc4_rain],
+        ['Original Rainfed Yield', 'Soil Constrained Yield', 'Soil Fc4 Factor'],
+        [2000, 2000, 1]
+    ):
+        im = ax.imshow(arr, vmin=0, vmax=vmax)
+        ax.set_title(title); plt.colorbar(im, ax=ax, shrink=0.8)
+    plt.tight_layout()
+    plt.savefig(f'{out_dir}/soil_constraints.png', bbox_inches='tight', dpi=150)
+    plt.close()
+
+    # -- Save rasters --
+    obj_util.saveRaster(BASEPATH, f'{out_dir}/yield_soil.tif',       yield_map_rain_m4)
+    obj_util.saveRaster(BASEPATH, f'{out_dir}/yield_soil_class.tif', yield_map_class)
+    obj_util.saveRaster(BASEPATH, f'{out_dir}/fc4_rain.tif',         fc4_rain)
+
+    print(f"    ✓ Module 4 outputs saved to {out_dir}")
+    return yield_map_rain_m4
+
+
+# =============================================================================
+# MODULE 5 — TERRAIN CONSTRAINTS
+# =============================================================================
+
+def run_module5(year, crop, yield_map_rain_m4, precip):
+    """
+    Apply terrain constraints to soil-constrained yield.
+    Returns yield_map_rain_m5.
+    """
+    print(f"  [Module 5 | {year} | {crop['label']}] Terrain constraints …")
+    out_dir = f'./data_output/module5/{crop["label"]}/{year}'
+    make_dirs(out_dir)
+
+    slope_map = gdal.Open(SLOPE_PATH).ReadAsArray()
+
+    tc = TerrainConstraints.TerrainConstraints()
+    tc.importTerrainReductionSheet(
+        irr_file_path=crop['terrain_excel'],
+        rain_file_path=crop['terrain_excel']
+    )
+    tc.setClimateTerrainData(precip, slope_map)
+    tc.calculateFI()
+
+    fi       = tc.getFI()
+    yield_m5 = tc.applyTerrainConstraints(yield_map_rain_m4, 'R')
+    fc5_rain = tc.getTerrainReductionFactor()
+
+    # -- Plots --
+    plt.imshow(fi); plt.colorbar(); plt.title('Fournier Index')
+    plt.savefig(f'{out_dir}/fournier_index.png', bbox_inches='tight', dpi=150)
+    plt.close()
+
+    vmax = np.max([yield_map_rain_m4, yield_m5])
+    fig, axes = plt.subplots(1, 3, figsize=(18, 9))
+    for ax, arr, title in zip(
+        axes,
+        [yield_map_rain_m4, yield_m5, fc5_rain],
+        ['Soil Constrained Yield', 'Terrain Constrained Yield', 'Terrain Fc5 Factor']
+    ):
+        im = ax.imshow(arr, vmax=vmax if 'Yield' in title else 1,
+                       vmin=0)
+        ax.set_title(title); plt.colorbar(im, ax=ax, shrink=0.8)
+    plt.tight_layout()
+    plt.savefig(f'{out_dir}/terrain_constraints.png', bbox_inches='tight', dpi=150)
+    plt.close()
+
+    # -- Save rasters --
+    obj_util.saveRaster(BASEPATH, f'{out_dir}/yield_terrain.tif', yield_m5)
+    obj_util.saveRaster(BASEPATH, f'{out_dir}/fi.tif',            fi)
+    obj_util.saveRaster(BASEPATH, f'{out_dir}/fc5_rain.tif',      fc5_rain)
+
+    print(f"    ✓ Module 5 outputs saved to {out_dir}")
+    return yield_m5
+
+
+# =============================================================================
+# MAIN
+# =============================================================================
+
+def run_all_module1():
+    """Run once. Re-run only if climate data changes."""
+    mask      = gdal.Open(MASK_PATH).ReadAsArray()
+    elevation = np.load(r'./data_input/terrain/elevation.npy')
+
+    for year in YEARS:
+
+         # Load thermal climate and zones based on average period that includes this year
+        if year in range(1979, 1999):
+            avg_period= '1979-1998'
+        else:                
+            avg_period= '1999-2018'
+
+        tclimate = gdal.Open(f'./data_output/module1/{avg_period}/thermalClimate.tif').ReadAsArray()
+        tzone    = gdal.Open(f'./data_output/module1/{avg_period}/thermalZone.tif').ReadAsArray()
+        try: 
+            clim = load_climate(year)
+            run_module1_year(year, mask, elevation, tclimate, tzone, clim)
+            del clim
+        except Exception as e:
+            raise RuntimeError(f"Failed on year {year}") from e
+
+def main():
+    # -- Load static data (once) --
+    print("Loading static data …")
+    mask      = gdal.Open(MASK_PATH).ReadAsArray()
+    elevation = np.load(r'./data_input/terrain/elevation.npy')
+
+    # -- Outer loop: crops --
+    for crop in CROPS:
+        print(f"\n{'='*60}")
+        print(f"  CROP: {crop['label']}")
+        print(f"{'='*60}")
+
+        # -- Inner loop: years --
+        for year in YEARS:
+            print(f"\n  --- Year: {year} ---")
+
+            # Load climate data for this year
+            clim = load_climate(year)
+
+            # Load permafrost classification (produced by Module 1 in prior run,
+            # or by the permafrost standalone script)
+            permafrost_class = np.load(
+                f'./data_output/module1/permafrost_maps/permafrost_{year}.npy'
+            )
+
+            # Module 1: per-year indicators
+            m1 = run_module1_year(year, mask, elevation, tclimate, tzone, clim)
+
+            # Module 2: crop simulation
+            yield_rain, start_date = run_module2(
+                year, crop, mask, elevation, clim, tclimate, m1, permafrost_class
+            )
+
+            # Module 4: soil constraints
+            yield_rain_m4 = run_module4(year, crop, yield_rain)
+
+            # Module 5: terrain constraints
+            yield_rain_m5 = run_module5(year, crop, yield_rain_m4, clim['precip'])
+
+            # Free year's climate data
+            del clim
+
+            print(f"  ✓ Year {year} complete for {crop['label']}")
+
+        print(f"\n  ✓ All years complete for crop: {crop['label']}")
+
+    print("\n\nAll crops and years complete.")
+
+
+if __name__ == '__main__':
+    #main()
+    run_all_module1()

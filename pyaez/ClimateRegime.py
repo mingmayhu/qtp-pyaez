@@ -115,12 +115,11 @@ class ClimateRegime(object):
         wind_speed[wind_speed < 0] = 0
         
         
-        self.meanT_daily = np.zeros((self.im_height, self.im_width, 365))
         self.totalPrec_daily = np.zeros((self.im_height, self.im_width, 365))
         self.pet_daily = np.zeros((self.im_height, self.im_width, 365))
         self.maxT_daily = max_temp
         self.minT_daily = min_temp
-        
+        self.meanT_daily = np.zeros((self.im_height, self.im_width, 365))
 
         for i_row in range(self.im_height):
             for i_col in range(self.im_width):
@@ -128,7 +127,6 @@ class ClimateRegime(object):
                 if self.set_mask:
                     if self.im_mask[i_row, i_col] == self.nodata_val:
                         continue
-
                 self.meanT_daily[i_row, i_col, :] = 0.5*(min_temp[i_row, i_col, :]+max_temp[i_row, i_col, :])
                 self.totalPrec_daily[i_row, i_col, :] = precipitation[i_row, i_col, :]
                 
@@ -143,6 +141,9 @@ class ClimateRegime(object):
         # P over PET ratio (to eliminate nan in the result, nan is replaced with zero)
         self.P_by_PET_daily = np.nan_to_num(self.totalPrec_daily / self.pet_daily)
         self.set_monthly = False
+
+    def setDailyPermafrostData(self, eta):
+        self.eta_daily = eta
 
     def getThermalClimate(self):
         """Classification of rainfall and temperature seasonality into thermal climate classes
@@ -458,12 +459,13 @@ class ClimateRegime(object):
             return [A1, A2, A3, A4, A5, A6, A7, A8, A9, B1, B2, B3, B4, B5, B6, B7, B8, B9]
 
 
-    def getLGP(self, Sa=100., D=1.):
+    def getLGP(self, Sa=100., D=1., eta_full=None):
         """Calculate length of growing period (LGP)
 
         Args:
             Sa (float, optional): Available soil moisture holding capacity [mm/m]. Defaults to 100..
             D (float, optional): Rooting depth. Defaults to 1..
+            eta_full (array, optional): Full evapotranspiration values for each grid cell and day. Defaults to None.
 
         Returns:
            2D NumPy: Length of Growing Period
@@ -514,6 +516,15 @@ class ClimateRegime(object):
                             self.Eto365[i_row, i_col, doy]),
                         Wb_old, Sb_old, doy, istart0, istart1,
                         Sa, D, p, kc_list, lgpt5_point)
+                    # Etm_new, kc_new = LGPCalc.NewEtaCalc(
+                    #     np.float64(Tx365[i_row, i_col, doy]), np.float64(
+                    #         Ta365[i_row, i_col, doy]),
+                    #         # Ta365[i_row, i_col, doy]),
+                    #     np.float64(Pcp365[i_row, i_col, doy]), Txsnm, Fsnm, np.float64(
+                    #         self.Eto365[i_row, i_col, doy]),
+                    #     Wb_old, Sb_old, doy, istart0, istart1,
+                    #     Sa, D, 0, kc_list, lgpt5_point)
+                    # Eta_new = self.eta_daily[i_row, i_col, doy]
 
                     if Eta_new <0.: Eta_new = 0.
 
@@ -526,6 +537,109 @@ class ClimateRegime(object):
 
                     Wb_old = Wb_new
                     Sb_old = Sb_new
+        #============================================
+        for i_row in range(self.im_height):
+            for i_col in range(self.im_width):
+                if self.set_mask:
+                    if self.im_mask[i_row, i_col] == self.nodata_val:
+                        continue
+                Etm365X = np.append(self.Etm365[i_row, i_col, :], self.Etm365[i_row, i_col, :])
+                Eta365X = np.append(self.Eta365[i_row, i_col, :], self.Eta365[i_row, i_col, :])
+                islgp = LGPCalc.islgpt(self.meanT_daily[i_row, i_col, :])
+                xx = LGPCalc.val10day(Eta365X)
+                yy = LGPCalc.val10day(Etm365X)
+                lgp_whole = xx[:365]/yy[:365]
+                count = 0
+                for i in range(len(lgp_whole)):
+                    if islgp[i] == 1 and lgp_whole[i] >= 0.4:
+                        count = count+1
+
+                lgp_tot[i_row, i_col] = count
+
+        
+        if self.set_mask:
+            return np.where(self.im_mask, lgp_tot, np.nan)
+        else:
+            return lgp_tot
+
+    def getNewLGP(self, Sa=100., D=1., eta_full=None):
+        """Calculate length of growing period (LGP)
+
+        Args:
+            Sa (float, optional): Available soil moisture holding capacity [mm/m]. Defaults to 100..
+            D (float, optional): Rooting depth. Defaults to 1..
+            eta_full (array, optional): Full evapotranspiration values for each grid cell and day. Defaults to None.
+
+        Returns:
+           2D NumPy: Length of Growing Period
+        """        
+        #============================
+        kc_list = np.array([0.0, 0.1, 0.2, 0.5, 1.0])
+        #============================
+        Txsnm = 0.  # Txsnm - snow melt temperature threshold
+        Fsnm = 5.5  # Fsnm - snow melting coefficient
+        #============================
+        Tx365 = self.maxT_daily.copy()
+        Ta365 = self.meanT_daily.copy()
+        Pcp365 = self.totalPrec_daily.copy()
+        self.Eto365 = self.pet_daily.copy()  # Eto
+        self.Etm365 = np.zeros(Tx365.shape)
+        self.Eta365 = np.zeros(Tx365.shape)
+        self.Sb365 = np.zeros(Tx365.shape)
+        self.Wb365 = np.zeros(Tx365.shape)
+        self.Wx365 = np.zeros(Tx365.shape)
+        self.kc365 = np.zeros(Tx365.shape)
+        meanT_daily_new = np.zeros(Tx365.shape)
+        self.maxT_daily_new = np.zeros(Tx365.shape)
+        lgp_tot = np.zeros((self.im_height, self.im_width))
+        #============================
+        for i_row in range(self.im_height):
+            for i_col in range(self.im_width):
+                Sb_old = 0.
+                Wb_old = 0.                
+
+                lgpt5_point = self.lgpt5[i_row, i_col]
+
+                totalPrec_monthly = UtilitiesCalc.UtilitiesCalc().averageDailyToMonthly(self.totalPrec_daily[i_row, i_col, :])
+                meanT_daily_point = Ta365[i_row, i_col, :]
+                istart0, istart1 = LGPCalc.rainPeak(totalPrec_monthly, meanT_daily_point, lgpt5_point)
+                #----------------------------------
+                if self.set_mask:
+                    if self.im_mask[i_row, i_col] == self.nodata_val:
+                        continue
+
+                for doy in range(0, 365):
+                    # p = LGPCalc.psh(
+                    #     0., self.Eto365[i_row, i_col, doy])
+                    # Eta_new, Etm_new, Wb_new, Wx_new, Sb_new, kc_new = LGPCalc.EtaCalc(
+                    #     np.float64(Tx365[i_row, i_col, doy]), np.float64(
+                    #         Ta365[i_row, i_col, doy]),
+                    #         # Ta365[i_row, i_col, doy]),
+                    #     np.float64(Pcp365[i_row, i_col, doy]), Txsnm, Fsnm, np.float64(
+                    #         self.Eto365[i_row, i_col, doy]),
+                    #     Wb_old, Sb_old, doy, istart0, istart1,
+                    #     Sa, D, p, kc_list, lgpt5_point)
+                    Etm_new, kc_new = LGPCalc.NewEtaCalc(
+                        np.float64(Tx365[i_row, i_col, doy]), np.float64(
+                            Ta365[i_row, i_col, doy]),
+                            # Ta365[i_row, i_col, doy]),
+                        np.float64(Pcp365[i_row, i_col, doy]), Txsnm, Fsnm, np.float64(
+                            self.Eto365[i_row, i_col, doy]),
+                        Wb_old, Sb_old, doy, istart0, istart1,
+                        Sa, D, 0, kc_list, lgpt5_point)
+                    Eta_new = self.eta_daily[i_row, i_col, doy]
+
+                    if Eta_new <0.: Eta_new = 0.
+
+                    self.Eta365[i_row, i_col, doy] = Eta_new
+                    self.Etm365[i_row, i_col, doy] = Etm_new
+                    # self.Wb365[i_row, i_col, doy] = Wb_new
+                    # self.Wx365[i_row, i_col, doy] = Wx_new
+                    # self.Sb365[i_row, i_col, doy] = Sb_new
+                    self.kc365[i_row, i_col, doy] = kc_new
+
+                    # Wb_old = Wb_new
+                    # Sb_old = Sb_new
         #============================================
         for i_row in range(self.im_height):
             for i_col in range(self.im_width):
