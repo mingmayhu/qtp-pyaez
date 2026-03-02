@@ -26,6 +26,10 @@ MASK_VALUE = 0
 SA = 100.
 D  = 1.
 
+# Set to True to run the "no permafrost thaw" counterfactual
+NO_THAW_BASELINE_RUN = False
+RUN_TAG = '_nothaw' if NO_THAW_BASELINE_RUN else ''
+
 # --- Crops -------------------------------------------------------------------
 # Add or remove dicts to change which crops are processed.
 # Each dict must have:
@@ -130,10 +134,13 @@ def make_dirs(*paths):
     for p in paths:
         os.makedirs(p, exist_ok=True)
 
-def load_climate(year):
+def load_climate(year, permafrost_year=None):
     import calendar
+    if permafrost_year is None:
+        permafrost_year = year
+        
     d = f'data_input/climate_yearly/{year}'
-    p = f'data_input/permafrost_yearly/{year}'
+    p = f'data_input/permafrost_yearly/{permafrost_year}'  # use permafrost_year here
 
     data = {
         'max_temp'  : np.load(f'{d}/TempMax.npy'),
@@ -142,13 +149,11 @@ def load_climate(year):
         'rh'        : np.load(f'{d}/RH.npy'),
         'wind'      : np.load(f'{d}/Wind.npy'),
         'rad'       : np.load(f'{d}/Radiation.npy'),
-        'mean_temp' : np.load(f'{d}/TempMean.npy'),
         'eta'       : np.load(f'{p}/ET.npy'),
         'alt'       : np.load(f'{p}/active_layer_depth.npy'),
         'soil_moist': np.load(f'{p}/avail_soil_moisture.npy'),
     }
 
-    # Remove Feb 29 (day index 59, 0-based) for leap years
     if calendar.isleap(year):
         data = {k: np.delete(v, 59, axis=2) if v.ndim == 3 else v 
                 for k, v in data.items()}
@@ -582,14 +587,21 @@ def main():
         for year in YEARS:
             print(f"\n  --- Year: {year} ---")
 
+            # After:
+            if NO_THAW_BASELINE_RUN and year in range(1999, 2019):
+                permafrost_year = year - 20  # 1999→1979, 2000→1980, ..., 2018→1998
+                print(f"    [NO THAW] Using permafrost from {permafrost_year} (instead of {year})")
+            else:
+                permafrost_year = year
+
             # Load climate data for this year
-            clim = load_climate(year)
+            clim = load_climate(year, permafrost_year=permafrost_year)
 
             # Load permafrost classification (produced by Module 1 in prior run,
             # or by the permafrost standalone script)
+            
             permafrost_class = np.load(
-                f'./data_output/module1/permafrost_maps/permafrost_{year}.npy'
-            )
+                f'./data_output/module1/permafrost_maps/permafrost_{permafrost_year}.npy')
 
              # Load thermal climate and zones based on average period that includes this year
             if year in range(1979, 1999):
