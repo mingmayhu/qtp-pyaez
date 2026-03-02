@@ -27,7 +27,7 @@ SA = 100.
 D  = 1.
 
 # Set to True to run the "no permafrost thaw" counterfactual
-NO_THAW_BASELINE_RUN = False
+NO_THAW_BASELINE_RUN = True
 RUN_TAG = '_nothaw' if NO_THAW_BASELINE_RUN else ''
 
 # --- Crops -------------------------------------------------------------------
@@ -51,36 +51,36 @@ CROPS = [
     #     'terrain_crop_group': 'annuals 1',
     #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
     # },
-    # {
-    #     'crop_name'      : 'winter_barley_61',
-    #     'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
-    #     'terrain_crop_group': 'annuals 1',
-    #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
-    # },
-    # {
-    #     'crop_name'      : 'winter_barley_62',
-    #     'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
-    #     'terrain_crop_group': 'annuals 1',
-    #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
-    # },
-    #     {
-    #     'crop_name'      : 'spring_barley_63',
-    #     'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
-    #     'terrain_crop_group': 'annuals 1',
-    #     'no_t_climate'   : [1, 2, 12],
-    # },
-    #         {
-    #     'crop_name'      : 'spring_barley_64',
-    #     'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
-    #     'terrain_crop_group': 'annuals 1',
-    #     'no_t_climate'   : [1, 2, 12],
-    # },
-    #         {
-    #     'crop_name'      : 'spring_barley_65',
-    #     'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
-    #     'terrain_crop_group': 'annuals 1',
-    #     'no_t_climate'   : [1, 2, 12],
-    # },
+    {
+        'crop_name'      : 'winter_barley_61',
+        'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
+        'terrain_crop_group': 'annuals 1',
+        'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    },
+    {
+        'crop_name'      : 'winter_barley_62',
+        'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
+        'terrain_crop_group': 'annuals 1',
+        'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    },
+        {
+        'crop_name'      : 'spring_barley_63',
+        'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
+        'terrain_crop_group': 'annuals 1',
+        'no_t_climate'   : [1, 2, 12],
+    },
+            {
+        'crop_name'      : 'spring_barley_64',
+        'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
+        'terrain_crop_group': 'annuals 1',
+        'no_t_climate'   : [1, 2, 12],
+    },
+            {
+        'crop_name'      : 'spring_barley_65',
+        'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
+        'terrain_crop_group': 'annuals 1',
+        'no_t_climate'   : [1, 2, 12],
+    },
             {
         'crop_name'      : 'spring_barley_66',
         'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
@@ -170,7 +170,7 @@ def run_module1_year(year, mask, elevation, tclimate, tzone, clim):
     Returns dict with lgp, lgpt5, lgpt10, tsum0, tsum10 arrays (needed downstream).
     """
     print(f"  [Module 1 | {year}] Computing per-year indicators …")
-    out_dir = f'./data_output/module1/{year}'
+    out_dir = f'./data_output/module1{RUN_TAG}/{year}'
     make_dirs(out_dir)
 
     tile_list = ['A9','A8','A7','A6','A5','A4','A3','A2',
@@ -279,7 +279,7 @@ def run_module2(year, crop, mask, elevation, clim, tclimate, m1, permafrost_clas
     m1: dict returned by run_module1_year (lgp, lgpt5, lgpt10, tsum0, tsum10)
     """
     print(f"  [Module 2 | {year} | {crop['crop_name']}] Crop simulation …")
-    out_dir = f'./data_output/module2/{crop["crop_name"]}/{year}'
+    out_dir = f'./data_output/module2{RUN_TAG}/{crop["crop_name"]}/{year}'
     make_dirs(out_dir)
 
     aez = CropSimulation.CropSimulation()
@@ -352,7 +352,7 @@ def run_module4(year, crop, yield_map_rain):
     Returns yield_map_rain_m4.
     """
     print(f"  [Module 4 | {year} | {crop['crop_name']}] Soil constraints …")
-    out_dir = f'./data_output/module4/{crop["crop_name"]}/{year}'
+    out_dir = f'./data_output/module4{RUN_TAG}/{crop["crop_name"]}/{year}'
     make_dirs(out_dir)
 
     soil_map = gdal.Open(SOIL_MAP).ReadAsArray()
@@ -419,7 +419,7 @@ def run_module5(year, crop, yield_map_rain_m4, precip):
     Returns yield_map_rain_m5.
     """
     print(f"  [Module 5 | {year} | {crop['crop_name']}] Terrain constraints …")
-    out_dir = f'./data_output/module5/{crop["crop_name"]}/{year}'
+    out_dir = f'./data_output/module5{RUN_TAG}/{crop["crop_name"]}/{year}'
     make_dirs(out_dir)
 
     slope_map = gdal.Open(SLOPE_PATH).ReadAsArray()
@@ -470,24 +470,24 @@ def final_yield_classification(year, crop, yield_map_rain_m5):
     Returns yield_map_class.
     """
     print(f"  [Final Classification | {year} | {crop['crop_name']}] Classifying final yield …")
-    out_dir = f'./data_output/final_classification/{crop["crop_name"]}'
+    out_dir = f'./data_output/final_classification{RUN_TAG}/{crop["crop_name"]}'
     make_dirs(out_dir)
 
         # Check if any valid yield exists
     if not np.any(yield_map_rain_m5 > 0):
         print(f"    ⚠ No valid yield for {crop['crop_name']} in {year} — saving zero map.")
         yield_map_class = np.zeros(yield_map_rain_m5.shape)
-        obj_util.saveRaster(BASEPATH, f'{out_dir}/{year}_final_yield_class.tif', yield_map_class)
+        obj_util.saveRaster(BASEPATH, f'{out_dir}/{year}_final_yield_class{RUN_TAG}.tif', yield_map_class)
         return yield_map_class
 
     yield_map_class = obj_util.classifyFinalYield(yield_map_rain_m5)
 
     plt.imshow(yield_map_class, vmin=0, vmax=5, cmap=plt.get_cmap('tab10', 6))
     plt.title('Final Yield Class'); plt.colorbar()
-    plt.savefig(f'{out_dir}/{year}_final_yield_class.png', bbox_inches='tight', dpi=150)
+    plt.savefig(f'{out_dir}/{year}_final_yield_class{RUN_TAG}.png', bbox_inches='tight', dpi=150)
     plt.close()
 
-    obj_util.saveRaster(BASEPATH, f'{out_dir}/{year}_final_yield_class.tif', yield_map_class)
+    obj_util.saveRaster(BASEPATH, f'{out_dir}/{year}_final_yield_class{RUN_TAG}.tif', yield_map_class)
     print(f"    ✓ Final classified yield saved to {out_dir}")
     return yield_map_class
 
@@ -499,7 +499,13 @@ def plot_final_classification(crop):
     axes = axes.flatten()
 
     for i, year in enumerate(YEARS):
-        path = f'./data_output/final_classification/{crop}/{year}_final_yield_class.tif'
+        if RUN_TAG:
+            if year in range(1979, 1999):
+                tag = ''
+            else:
+                tag = RUN_TAG
+
+        path = f'./data_output/final_classification{tag}/{crop}/{year}_final_yield_class{tag}.tif'
         ds = gdal.Open(path)
         if ds is None:
             axes[i].set_title(f'{year}\n(missing)', fontsize=8)
@@ -515,9 +521,9 @@ def plot_final_classification(crop):
     for j in range(i + 1, len(axes)):
         axes[j].axis('off')
 
-    fig.suptitle(f'Final Yield Classification — {crop}', fontsize=14, y=1.01)
+    fig.suptitle(f'Final Yield Classification {RUN_TAG} — {crop}', fontsize=14, y=1.01)
     plt.tight_layout()
-    out_path = f'./data_output/final_classification/{crop}/all_years_classification.png'
+    out_path = f'./data_output/final_classification{RUN_TAG}/{crop}/all_years_classification{RUN_TAG}.png'
     plt.savefig(out_path, bbox_inches='tight', dpi=150)
     plt.close()
     print(f'  ✓ All-years classification plot saved to {out_path}')
@@ -530,6 +536,9 @@ def combine_crop_maps(year, varieties, output_tag=None):
     for variety in varieties:
         # Load raw yield from module 5, NOT the classified tif
         path = f'./data_output/module5/{variety}/{year}/yield_terrain.tif'
+        if not os.path.exists(path):
+            print(f"    ⚠ Missing yield map for {variety} in {year} — skipping.")
+            continue
         arr = gdal.Open(path).ReadAsArray().astype(float)
         arr[arr < 0] = np.nan
         stacked.append(arr)
@@ -540,10 +549,25 @@ def combine_crop_maps(year, varieties, output_tag=None):
     # Classify ONCE across all varieties together
     best_class = obj_util.classifyFinalYield(best_raw)
 
+    # -- Plot --
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    im0 = axes[0].imshow(best_raw, cmap='YlGn')
+    axes[0].set_title(f'Best Raw Yield — {output_tag} {year}')
+    plt.colorbar(im0, ax=axes[0], shrink=0.8, label='kg/ha')
+
+    im1 = axes[1].imshow(best_class, cmap=plt.get_cmap('tab10', 6), vmin=0, vmax=5)
+    axes[1].set_title(f'Yield Suitability Class — {output_tag} {year}')
+    plt.colorbar(im1, ax=axes[1], shrink=0.8, ticks=[0,1,2,3,4,5],
+                 label='0=none 1=not suitable … 5=very suitable')
+
+    plt.tight_layout()
+    plt.savefig(f'{out_dir}/{year}_combined.png', bbox_inches='tight', dpi=150)
+    plt.close()
+
     obj_util.saveRaster(BASEPATH, f'{out_dir}/{year}_raw_yield.tif', best_raw)
     obj_util.saveRaster(BASEPATH, f'{out_dir}/{year}_final_yield_class.tif', best_class)
-    return best_raw, best_class
 
+    return best_raw, best_class
 
 # =============================================================================
 # MAIN
@@ -564,8 +588,14 @@ def run_all_module1():
 
         tclimate = gdal.Open(f'./data_output/module1/{avg_period}/thermalClimate.tif').ReadAsArray()
         tzone    = gdal.Open(f'./data_output/module1/{avg_period}/thermalZone.tif').ReadAsArray()
+
+        if NO_THAW_BASELINE_RUN and year in range(1999, 2019):
+            permafrost_year = year - 20  # 1999→1979, 2000→1980, ..., 2018→1998
+            print(f"    [NO THAW] Using permafrost from {permafrost_year} (instead of {year})")
+        else:
+            permafrost_year = year
         try: 
-            clim = load_climate(year)
+            clim = load_climate(year, permafrost_year=permafrost_year)
             run_module1_year(year, mask, elevation, tclimate, tzone, clim)
             del clim
         except Exception as e:
@@ -608,11 +638,11 @@ def main():
                 avg_period= '1979-1998'
             else:                
                 avg_period= '1999-2018'
-
+            
             tclimate = gdal.Open(f'./data_output/module1/{avg_period}/thermalClimate.tif').ReadAsArray()
-            lgp = gdal.Open(f'./data_output/module1/{year}/LGP New.tif').ReadAsArray()
-            lgpt5 = gdal.Open(f'./data_output/module1/{year}/LGPt5.tif').ReadAsArray()
-            lgpt10 = gdal.Open(f'./data_output/module1/{year}/LGPt10.tif').ReadAsArray()
+            lgp = gdal.Open(f'./data_output/module1{RUN_TAG}/{year}/LGP New.tif').ReadAsArray()
+            lgpt5 = gdal.Open(f'./data_output/module1{RUN_TAG}/{year}/LGPt5.tif').ReadAsArray()
+            lgpt10 = gdal.Open(f'./data_output/module1{RUN_TAG}/{year}/LGPt10.tif').ReadAsArray()
             m1 = {'lgp': lgp, 'lgpt5': lgpt5, 'lgpt10': lgpt10}
 
             try:
@@ -640,11 +670,52 @@ def main():
 
     print("\n\nAll crops and years complete.")
 
+def run_from_module4():
+    print("Loading static data …")
+
+    for crop in CROPS:
+        print(f"\n{'='*60}")
+        print(f"  CROP: {crop['crop_name']}")
+        print(f"{'='*60}")
+
+        for year in YEARS:
+            print(f"\n  --- Year: {year} ---")
+
+            # Load saved module 2 yield output
+            m2_path = f'./data_output/module2{RUN_TAG}/{crop["crop_name"]}/{year}/yield_map_rain.tif'
+            ds = gdal.Open(m2_path)
+            if ds is None:
+                print(f"    ⚠ Module 2 output not found for {crop['crop_name']} {year} — skipping.")
+                continue
+            yield_rain = ds.ReadAsArray().astype(float)
+            yield_rain[yield_rain < 0] = 0  # clean nodata values
+
+            if not np.any(yield_rain > 0):
+                print(f"    ⚠ No valid yield in Module 2 output for {crop['crop_name']} {year} — skipping.")
+                continue
+
+            # Load precip for module 5
+            clim_precip = np.load(f'data_input/climate_yearly/{year}/Precip.npy')
+
+            try:
+                yield_rain_m4 = run_module4(year, crop, yield_rain)
+                yield_rain_m5 = run_module5(year, crop, yield_rain_m4, clim_precip)
+                final_class   = final_yield_classification(year, crop, yield_rain_m5)
+            except Exception as e:
+                raise RuntimeError(f"Failed on year {year} for crop {crop['crop_name']}") from e
+
+            print(f"  ✓ Year {year} complete for {crop['crop_name']}")
+
+        print(f"\n  ✓ All years complete for crop: {crop['crop_name']}")
+
+    print("\n\nAll crops and years complete.")
+
 
 if __name__ == '__main__':
-    main()
-    #run_all_module1()
-    # plot_final_classification("winter_barley_62")
+    # run_from_module4()
+    #main()
+    # run_all_module1()
+    plot_final_classification("winter_barley_59")
     # varieties = ['winter_barley_59', 'winter_barley_60', 'winter_barley_61', 'winter_barley_62','spring_barley_63', 'spring_barley_64', 'spring_barley_65', 'spring_barley_66']
     # for year in YEARS:
     #     combine_crop_maps(year, varieties, output_tag='barley/combined_barley')
