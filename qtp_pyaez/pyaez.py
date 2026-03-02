@@ -15,7 +15,7 @@ then read back by Modules 2, 4, and 5.
 
 WORK_DIR   = r'/Users/ming-mayhu/Desktop/毕业论文/qtp-pyaez/qtp_pyaez'
 ## TODO: make avg_period based on the year in the loop
-YEARS      = list(range(2013, 2019))
+YEARS      = list(range(1979, 2019))
 AVG_PERIOD = '1979-1998'
 
 # Geographic extents
@@ -30,43 +30,73 @@ D  = 1.
 # --- Crops -------------------------------------------------------------------
 # Add or remove dicts to change which crops are processed.
 # Each dict must have:
-#   label           : folder name used in outputs
 #   crop_name       : name passed to readCropandCropCycleParameters
-#   crop_excel      : path to crop/tsum parameter xlsx
-#   crop_rule_excel : path to crop-specific rule xlsx
 #   soil_rain_excel : path to soil reduction xlsx (rainfed)
 #   terrain_excel   : path to terrain reduction xlsx
 #   no_t_climate    : list of thermal climate classes to screen out
 # -----------------------------------------------------------------------------
 CROPS = [
-    {
-        'label'          : 'winter_barley',
-        'crop_name'      : 'winter_barley_59',
-        'crop_excel'     : r'./data_input/crop_inputs/input_crop_tsum_parameters.xlsx',
-        'crop_rule_excel': r'./data_input/crop_inputs/crop_specific_rule.xlsx',
-        'soil_rain_excel': r'./data_input/soil_inputs/winter_barley_soil.xlsx',
-        'terrain_excel'  : r'./data_input/terrain/barley_terrain.xlsx',
-        'no_t_climate'   : [1, 2, 9, 10, 11, 12],
-    },
     # {
-    #     'label'          : 'spring_wheat',
-    #     'crop_name'      : 'spring_wheat_xx',
-    #     'crop_excel'     : r'./data_input/crop_inputs/input_crop_tsum_parameters.xlsx',
-    #     'crop_rule_excel': r'./data_input/crop_inputs/crop_specific_rule.xlsx',
-    #     'soil_rain_excel': r'./data_input/soil_inputs/spring_wheat_soil.xlsx',
-    #     'terrain_excel'  : r'./data_input/terrain/wheat_terrain.xlsx',
+    #     'crop_name'      : 'winter_barley_59',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
     #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
     # },
+    # {
+    #     'crop_name'      : 'winter_barley_60',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    # },
+    # {
+    #     'crop_name'      : 'winter_barley_61',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    # },
+    # {
+    #     'crop_name'      : 'winter_barley_62',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    # },
+        {
+        'crop_name'      : 'spring_barley_63',
+        'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
+        'terrain_crop_group': 'annuals 1',
+        'no_t_climate'   : [1, 2, 12],
+    },
+            {
+        'crop_name'      : 'spring_barley_64',
+        'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
+        'terrain_crop_group': 'annuals 1',
+        'no_t_climate'   : [1, 2, 12],
+    },
+            {
+        'crop_name'      : 'spring_barley_65',
+        'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
+        'terrain_crop_group': 'annuals 1',
+        'no_t_climate'   : [1, 2, 12],
+    },
+            {
+        'crop_name'      : 'spring_barley_66',
+        'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
+        'terrain_crop_group': 'annuals 1',
+        'no_t_climate'   : [1, 2, 12],
+    }
 ]
 
 # --- Shared input paths ------------------------------------------------------
 MASK_PATH   = r'./data_input/qilian mask.tif'
 BASEPATH    = r'./data_input/qilian mask.tif'
-SOIL_MAP    = r'./data_input/hwsd.tif'
-SLOPE_PATH  = r'/data_input/terrain/slope.tif'
+SOIL_MAP    = r'./data_input/soil_inputs/hwsd.tif'
+SLOPE_PATH  = r'./data_input/terrain/slope.tif'
 SOIL_TOPSOIL = r'./data_input/soil_inputs/qtp_topsoil.xlsx'
 SOIL_SUBSOIL = r'./data_input/soil_inputs/qtp_subsoil.xlsx'
 SOIL_INPUT_LEVEL = 'L'   # L: Low, I: Intermediate, H: High
+TERRAIN_EXCEL = r'./data_input/terrain/terrain_reduction.xlsx' 
+CROP_EXCEL = r'./data_input/crop_inputs/input_crop_tsum_parameters.xlsx'
+CROP_RULE_EXCEL = r'./data_input/crop_inputs/crop_specific_rule.xlsx'
 
 # =============================================================================
 # IMPORTS
@@ -244,8 +274,8 @@ def run_module2(year, crop, mask, elevation, clim, tclimate, m1, permafrost_clas
     Returns (yield_map_rain, starting_date_rain).
     m1: dict returned by run_module1_year (lgp, lgpt5, lgpt10, tsum0, tsum10)
     """
-    print(f"  [Module 2 | {year} | {crop['label']}] Crop simulation …")
-    out_dir = f'./data_output/module2/{crop["label"]}/{year}'
+    print(f"  [Module 2 | {year} | {crop['crop_name']}] Crop simulation …")
+    out_dir = f'./data_output/module2/{crop["crop_name"]}/{year}'
     make_dirs(out_dir)
 
     aez = CropSimulation.CropSimulation()
@@ -258,18 +288,19 @@ def run_module2(year, crop, mask, elevation, clim, tclimate, m1, permafrost_clas
     aez.setPermafrostData(clim['alt'], clim['soil_moist'])
 
     aez.readCropandCropCycleParameters(
-        file_path=crop['crop_excel'],
+        file_path=CROP_EXCEL,
         crop_name=crop['crop_name']
     )
     aez.setSoilWaterParameters(Sa=100 * np.ones(mask.shape), pc=0.5)
     aez.setThermalClimateScreening(tclimate, no_t_climate=crop['no_t_climate'])
     aez.setPermafrostScreening(permafrost_class=permafrost_class)
     aez.setCropSpecificRule(
-        file_path=crop['crop_rule_excel'],
+        file_path=CROP_RULE_EXCEL,
         crop_name=crop['crop_name']
     )
     aez.ImportLGPandLGPT(lgp=m1['lgp'], lgpt5=m1['lgpt5'], lgpt10=m1['lgpt10'])
 
+    # TODO: change this to account for leap years
     aez.simulateCropCycle(start_doy=1, end_doy=365, step_doy=1, leap_year=False)
 
     yield_map_rain    = aez.getEstimatedYieldRainfed()
@@ -316,8 +347,8 @@ def run_module4(year, crop, yield_map_rain):
     Apply soil constraints to rainfed yield.
     Returns yield_map_rain_m4.
     """
-    print(f"  [Module 4 | {year} | {crop['label']}] Soil constraints …")
-    out_dir = f'./data_output/module4/{crop["label"]}/{year}'
+    print(f"  [Module 4 | {year} | {crop['crop_name']}] Soil constraints …")
+    out_dir = f'./data_output/module4/{crop["crop_name"]}/{year}'
     make_dirs(out_dir)
 
     soil_map = gdal.Open(SOIL_MAP).ReadAsArray()
@@ -376,16 +407,17 @@ def run_module5(year, crop, yield_map_rain_m4, precip):
     Apply terrain constraints to soil-constrained yield.
     Returns yield_map_rain_m5.
     """
-    print(f"  [Module 5 | {year} | {crop['label']}] Terrain constraints …")
-    out_dir = f'./data_output/module5/{crop["label"]}/{year}'
+    print(f"  [Module 5 | {year} | {crop['crop_name']}] Terrain constraints …")
+    out_dir = f'./data_output/module5/{crop["crop_name"]}/{year}'
     make_dirs(out_dir)
 
     slope_map = gdal.Open(SLOPE_PATH).ReadAsArray()
 
     tc = TerrainConstraints.TerrainConstraints()
     tc.importTerrainReductionSheet(
-        irr_file_path=crop['terrain_excel'],
-        rain_file_path=crop['terrain_excel']
+        irr_file_path=TERRAIN_EXCEL,
+        rain_file_path=TERRAIN_EXCEL,
+        sheet_name=crop['terrain_crop_group']
     )
     tc.setClimateTerrainData(precip, slope_map)
     tc.calculateFI()
@@ -420,6 +452,57 @@ def run_module5(year, crop, yield_map_rain_m4, precip):
 
     print(f"    ✓ Module 5 outputs saved to {out_dir}")
     return yield_m5
+
+def final_yield_classification(year, crop, yield_map_rain_m5):
+    """
+    Classify final yield into discrete classes.
+    Returns yield_map_class.
+    """
+    print(f"  [Final Classification | {year} | {crop['crop_name']}] Classifying final yield …")
+    out_dir = f'./data_output/final_classification/{crop["crop_name"]}'
+    make_dirs(out_dir)
+
+    yield_map_class = obj_util.classifyFinalYield(yield_map_rain_m5)
+
+    plt.imshow(yield_map_class, vmin=0, vmax=5, cmap=plt.get_cmap('tab10', 6))
+    plt.title('Final Yield Class'); plt.colorbar()
+    plt.savefig(f'{out_dir}/{year}_final_yield_class.png', bbox_inches='tight', dpi=150)
+    plt.close()
+
+    obj_util.saveRaster(BASEPATH, f'{out_dir}/{year}_final_yield_class.tif', yield_map_class)
+    print(f"    ✓ Final classified yield saved to {out_dir}")
+    return yield_map_class
+
+def plot_final_classification(crop):
+    n_cols = 8
+    n_rows = -(-len(YEARS) // n_cols)
+
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(n_cols * 4, n_rows * 3.5))
+    axes = axes.flatten()
+
+    for i, year in enumerate(YEARS):
+        path = f'./data_output/final_classification/{crop}/{year}_final_yield_class.tif'
+        ds = gdal.Open(path)
+        if ds is None:
+            axes[i].set_title(f'{year}\n(missing)', fontsize=8)
+            axes[i].axis('off')
+            continue
+        arr = ds.ReadAsArray().astype(float)
+        arr[arr < 0] = np.nan
+        im = axes[i].imshow(arr, cmap=plt.get_cmap('tab10', 6), vmin=0, vmax=5)
+        axes[i].set_title(str(year), fontsize=9)
+        axes[i].axis('off')
+        plt.colorbar(im, ax=axes[i], shrink=0.8)
+
+    for j in range(i + 1, len(axes)):
+        axes[j].axis('off')
+
+    fig.suptitle(f'Final Yield Classification — {crop}', fontsize=14, y=1.01)
+    plt.tight_layout()
+    out_path = f'./data_output/final_classification/{crop}/all_years_classification.png'
+    plt.savefig(out_path, bbox_inches='tight', dpi=150)
+    plt.close()
+    print(f'  ✓ All-years classification plot saved to {out_path}')
 
 
 # =============================================================================
@@ -457,7 +540,7 @@ def main():
     # -- Outer loop: crops --
     for crop in CROPS:
         print(f"\n{'='*60}")
-        print(f"  CROP: {crop['label']}")
+        print(f"  CROP: {crop['crop_name']}")
         print(f"{'='*60}")
 
         # -- Inner loop: years --
@@ -473,30 +556,45 @@ def main():
                 f'./data_output/module1/permafrost_maps/permafrost_{year}.npy'
             )
 
-            # Module 1: per-year indicators
-            m1 = run_module1_year(year, mask, elevation, tclimate, tzone, clim)
+             # Load thermal climate and zones based on average period that includes this year
+            if year in range(1979, 1999):
+                avg_period= '1979-1998'
+            else:                
+                avg_period= '1999-2018'
 
-            # Module 2: crop simulation
-            yield_rain, start_date = run_module2(
-                year, crop, mask, elevation, clim, tclimate, m1, permafrost_class
-            )
+            tclimate = gdal.Open(f'./data_output/module1/{avg_period}/thermalClimate.tif').ReadAsArray()
+            lgp = gdal.Open(f'./data_output/module1/{year}/LGP New.tif').ReadAsArray()
+            lgpt5 = gdal.Open(f'./data_output/module1/{year}/LGPt5.tif').ReadAsArray()
+            lgpt10 = gdal.Open(f'./data_output/module1/{year}/LGPt10.tif').ReadAsArray()
+            m1 = {'lgp': lgp, 'lgpt5': lgpt5, 'lgpt10': lgpt10}
 
-            # Module 4: soil constraints
-            yield_rain_m4 = run_module4(year, crop, yield_rain)
+            try:
+                # Module 2: crop simulation
+                yield_rain, start_date = run_module2(
+                    year, crop, mask, elevation, clim, tclimate, m1, permafrost_class
+                )
 
-            # Module 5: terrain constraints
-            yield_rain_m5 = run_module5(year, crop, yield_rain_m4, clim['precip'])
+                # Module 4: soil constraints
+                yield_rain_m4 = run_module4(year, crop, yield_rain)
 
-            # Free year's climate data
-            del clim
+                # Module 5: terrain constraints
+                yield_rain_m5 = run_module5(year, crop, yield_rain_m4, clim['precip'])
 
-            print(f"  ✓ Year {year} complete for {crop['label']}")
+                # Final classification            
+                final_class = final_yield_classification(year, crop, yield_rain_m5)
+                # Free year's climate data
+                del clim
+            except Exception as e:
+                raise RuntimeError(f"Failed on year {year} for crop {crop['crop_name']}") from e
 
-        print(f"\n  ✓ All years complete for crop: {crop['label']}")
+            print(f"  ✓ Year {year} complete for {crop['crop_name']}")
+        
+        print(f"\n  ✓ All years complete for crop: {crop['crop_name']}")
 
     print("\n\nAll crops and years complete.")
 
 
 if __name__ == '__main__':
-    #main()
-    run_all_module1()
+    # main()
+    #run_all_module1()
+    plot_final_classification("winter_barley_62")

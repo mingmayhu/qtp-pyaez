@@ -17,19 +17,19 @@ from pyaez import UtilitiesCalc
 
 class TerrainConstraints(object):
 
-    def importTerrainReductionSheet(self, irr_file_path, rain_file_path):
+    def importTerrainReductionSheet(self, irr_file_path, rain_file_path, sheet_name=0):
         """
         Upload the terrain reduction factor excel sheets into Module V object class.
         
         Args:
             rain_file_path (String): file path of terrain reduction factor for rainfed conditions (Excel sheet)
             irr_file_path (String): file path of terrain reduction factor for irrigated conditions (Excel sheet)
-        Return:
+            sheet_name (String): sheet name in the Excel file (default is 0)
             None.
         """
         # reading each individual excel sheet databases
-        rain_df = pd.read_excel(rain_file_path)
-        irr_df = pd.read_excel(irr_file_path)
+        rain_df = pd.read_excel(rain_file_path, sheet_name=sheet_name)
+        irr_df = pd.read_excel(irr_file_path, sheet_name=sheet_name)
 
         self.rain_slope_class = np.array([eval(rain_df.columns.to_numpy()[x+1]) for x in range(rain_df.columns.to_numpy()[1:].shape[0])])
         self.irr_slope_class = np.array([eval(irr_df.columns.to_numpy()[x+1]) for x in range(irr_df.columns.to_numpy()[1:].shape[0])])

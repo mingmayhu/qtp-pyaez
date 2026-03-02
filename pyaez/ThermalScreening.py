@@ -144,7 +144,7 @@ class ThermalScreening(object):
         self.set_Tprofile_screening = True
 
     # 4 Modification
-    def applyTypeBConstraint(self, data, input_temp_profile, perennial_flag=False):
+    def applyTypeBConstraint(self, data, input_temp_profile, perennial_flag=False, CYa=None, CYb=None, CY=None):
 
         self.rule = data['Constraint'].to_numpy()
         self.constr_type = data['Type'].to_numpy()
@@ -217,7 +217,12 @@ class ThermalScreening(object):
 
         self.calc_value = []
         for i in range(len(self.rule)):
-            self.calc_value.append(eval(self.rule[i]))
+            eval_context = {"CYa": CYa, "CYb": CYb, "CY": CY,
+                    "L1": L1, "L2": L2, "L3": L3, "L4": L4, "L5": L5, "L6": L6, "L7": L7, "L8": L8, "L9": L9, "L1a": L1a, "L1b": L1b, "L2a": L2a, "L2b": L2b, "L3a": L3a, "L3b": L3b, "L4a": L4a, "L4b": L4b, "L5a": L5a, "L5b": L5b, "L6a": L6a, "L6b": L6b, "L7a": L7a, "L7b": L7b, "L8a": L8a, "L8b": L8b, "L9a": L9a, "L9b": L9b}
+            self.calc_value.append(eval(self.rule[i], eval_context))
+            self.optimal[i]      = eval(str(self.optimal[i]),      eval_context)
+            self.sub_optimal[i]  = eval(str(self.sub_optimal[i]),  eval_context)
+            self.not_suitable[i] = eval(str(self.not_suitable[i]), eval_context)
 
         self.setTypeBConstraint = True
 
@@ -415,7 +420,7 @@ class ThermalScreening(object):
                                 [f1, thermal_screening_f])
 
                     # """If calculated value between sub-optimum and not-suitable threshold"""
-                        elif self.calc_value[i] < self.sub_optimal[i] and self.calc_value >= self.not_suitable[i]:
+                        elif self.calc_value[i] < self.sub_optimal[i] and self.calc_value[i] >= self.not_suitable[i]:
                             f1 = ((self.calc_value[i] - self.not_suitable[i])/(
                                 self.sub_optimal[i] - self.not_suitable[i]) * 0.25) + 0.75
                             thermal_screening_f = np.min(

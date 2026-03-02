@@ -108,7 +108,7 @@ class CropSimulation(object):
 
         self.set_monthly=True
 
-    def setDailyClimateData(self, min_temp, max_temp, precipitation, short_rad, wind_speed, rel_humidity, mean_temp):
+    def setDailyClimateData(self, min_temp, max_temp, precipitation, short_rad, wind_speed, rel_humidity):
         """Load DAILY climate data into the Class and calculate the Reference Evapotranspiration (ETo)
 
         Args:
@@ -132,7 +132,7 @@ class CropSimulation(object):
         self.wind2m_daily = wind_speed
         self.rel_humidity_daily = rel_humidity
 
-        self.meanT_daily = mean_temp
+        self.meanT_daily = np.zeros((self.im_height, self.im_width, 365))
         self.totalPrec_daily = np.zeros((self.im_height, self.im_width, 365))
         self.pet_daily = np.zeros((self.im_height, self.im_width, 365))
 
@@ -232,6 +232,9 @@ class CropSimulation(object):
             self.perennial = True
         else:
             self.perennial = False
+
+        self.CYa = crop_df['cya'][crop_df_index]
+        self.CYb = crop_df['cyb'][crop_df_index]
 
         # If users provide all TSUM thresholds, TSUM screening
         if np.any([math.isnan(crop_df['LnS'][crop_df_index]), math.isnan(crop_df['LsO'][crop_df_index]), math.isnan(crop_df['LO'][crop_df_index]), math.isnan(crop_df['HnS'][crop_df_index]), math.isnan(crop_df['HsO'][crop_df_index]), math.isnan(crop_df['HO'][crop_df_index])]):
@@ -963,7 +966,7 @@ class CropSimulation(object):
                         # Crop-Specific Rule Screening
                         if self.setTypeBConstraint:
                             obj_screening_rain.applyTypeBConstraint(
-                                data=self.data, input_temp_profile=obj_screening_rain.tprofile, perennial_flag= self.perennial)
+                                data=self.data, input_temp_profile=obj_screening_rain.tprofile, perennial_flag= self.perennial, CYa=self.CYa, CYb=self.CYb, CY=self.cycle_len)
 
                         # Initial set up value for fc1 RAINFED
                         fc1_rain = 1.
@@ -1006,8 +1009,8 @@ class CropSimulation(object):
                                 Sa_temp = self.Sa
                             obj_cropwat.setCropParameters(self.d_per, self.kc, self.kc_all, self.yloss_f,
                                                             self.yloss_f_all, est_yield_rainfed, self.D1, self.D2, Sa_temp, self.pc, self.plant_height)
-                            #est_yield_moisture_limited = obj_cropwat.calculateMoistureLimitedYieldNew()
-                            est_yield_moisture_limited = obj_cropwat.calculateMoistureLimitedYield()
+                            est_yield_moisture_limited = obj_cropwat.calculateMoistureLimitedYieldNew()
+                            #est_yield_moisture_limited = obj_cropwat.calculateMoistureLimitedYield()
 
                             fc2_value = obj_cropwat.getfc2factormap()
 
@@ -1070,7 +1073,7 @@ class CropSimulation(object):
                         # Crop-Specific Rule Screening
                         if self.setTypeBConstraint:
                             obj_screening_irr.applyTypeBConstraint(
-                                data=self.data, input_temp_profile=obj_screening_irr.tprofile, perennial_flag= self.perennial)
+                                data=self.data, input_temp_profile=obj_screening_irr.tprofile, perennial_flag= self.perennial, CYa=self.CYa, CYb=self.CYb, CY=self.cycle_len)
 
                         # Initial set up value for fc1 RAINFED
                         fc1_irr = 1.
