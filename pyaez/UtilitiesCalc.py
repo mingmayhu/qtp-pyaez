@@ -98,6 +98,11 @@ class UtilitiesCalc(object):
         class 2 = marginally suitable = yields between 20% and 40%,
         class 1 = not suitable = yields between 0% and 20%.
         '''
+        est_yield_class = np.zeros(est_yield.shape)
+    
+        valid = est_yield[est_yield > 0]
+        if valid.size == 0:  # no valid yields — return zero map
+            return est_yield_class
 
         est_yield_max = np.amax( est_yield[est_yield>0] )
         est_yield_min = np.amin( est_yield[est_yield>0] )

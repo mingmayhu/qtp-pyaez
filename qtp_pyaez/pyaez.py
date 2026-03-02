@@ -16,7 +16,6 @@ then read back by Modules 2, 4, and 5.
 WORK_DIR   = r'/Users/ming-mayhu/Desktop/毕业论文/qtp-pyaez/qtp_pyaez'
 ## TODO: make avg_period based on the year in the loop
 YEARS      = list(range(1979, 2019))
-AVG_PERIOD = '1979-1998'
 
 # Geographic extents
 LAT_MIN    = 35.921391739
@@ -60,24 +59,24 @@ CROPS = [
     #     'terrain_crop_group': 'annuals 1',
     #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
     # },
-        {
-        'crop_name'      : 'spring_barley_63',
-        'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
-        'terrain_crop_group': 'annuals 1',
-        'no_t_climate'   : [1, 2, 12],
-    },
-            {
-        'crop_name'      : 'spring_barley_64',
-        'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
-        'terrain_crop_group': 'annuals 1',
-        'no_t_climate'   : [1, 2, 12],
-    },
-            {
-        'crop_name'      : 'spring_barley_65',
-        'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
-        'terrain_crop_group': 'annuals 1',
-        'no_t_climate'   : [1, 2, 12],
-    },
+    #     {
+    #     'crop_name'      : 'spring_barley_63',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 12],
+    # },
+    #         {
+    #     'crop_name'      : 'spring_barley_64',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 12],
+    # },
+    #         {
+    #     'crop_name'      : 'spring_barley_65',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 12],
+    # },
             {
         'crop_name'      : 'spring_barley_66',
         'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
@@ -375,6 +374,13 @@ def run_module4(year, crop, yield_map_rain):
     yield_map_class   = obj_util.classifyFinalYield(yield_map_rain_m4)
     fc4_rain          = sc.getSoilSuitabilityMap()
 
+    # Guard against all-zero yield maps
+    if not np.any(yield_map_rain_m4 > 0):
+        print(f"    ⚠ No valid yield after soil constraints for {crop['crop_name']} in {year} — saving zero map.")
+        obj_util.saveRaster(BASEPATH, f'{out_dir}/yield_soil.tif', yield_map_rain_m4)
+        obj_util.saveRaster(BASEPATH, f'{out_dir}/fc4_rain.tif', fc4_rain)
+        return yield_map_rain_m4
+
     # -- Plots --
     fig, axes = plt.subplots(1, 3, figsize=(25, 9))
     for ax, arr, title, vmax in zip(
@@ -462,6 +468,13 @@ def final_yield_classification(year, crop, yield_map_rain_m5):
     out_dir = f'./data_output/final_classification/{crop["crop_name"]}'
     make_dirs(out_dir)
 
+        # Check if any valid yield exists
+    if not np.any(yield_map_rain_m5 > 0):
+        print(f"    ⚠ No valid yield for {crop['crop_name']} in {year} — saving zero map.")
+        yield_map_class = np.zeros(yield_map_rain_m5.shape)
+        obj_util.saveRaster(BASEPATH, f'{out_dir}/{year}_final_yield_class.tif', yield_map_class)
+        return yield_map_class
+
     yield_map_class = obj_util.classifyFinalYield(yield_map_rain_m5)
 
     plt.imshow(yield_map_class, vmin=0, vmax=5, cmap=plt.get_cmap('tab10', 6))
@@ -503,6 +516,28 @@ def plot_final_classification(crop):
     plt.savefig(out_path, bbox_inches='tight', dpi=150)
     plt.close()
     print(f'  ✓ All-years classification plot saved to {out_path}')
+
+def combine_crop_maps(year, varieties, output_tag=None):
+    out_dir = f'./data_output/final_classification/{output_tag}'
+    os.makedirs(out_dir, exist_ok=True)
+
+    stacked = []
+    for variety in varieties:
+        # Load raw yield from module 5, NOT the classified tif
+        path = f'./data_output/module5/{variety}/{year}/yield_terrain.tif'
+        arr = gdal.Open(path).ReadAsArray().astype(float)
+        arr[arr < 0] = np.nan
+        stacked.append(arr)
+
+    stacked = np.stack(stacked, axis=0)       # (n_varieties, rows, cols)
+    best_raw = np.nanmax(stacked, axis=0)     # best raw yield per cell
+
+    # Classify ONCE across all varieties together
+    best_class = obj_util.classifyFinalYield(best_raw)
+
+    obj_util.saveRaster(BASEPATH, f'{out_dir}/{year}_raw_yield.tif', best_raw)
+    obj_util.saveRaster(BASEPATH, f'{out_dir}/{year}_final_yield_class.tif', best_class)
+    return best_raw, best_class
 
 
 # =============================================================================
@@ -595,6 +630,9 @@ def main():
 
 
 if __name__ == '__main__':
-    # main()
+    main()
     #run_all_module1()
-    plot_final_classification("winter_barley_62")
+    # plot_final_classification("winter_barley_62")
+    # varieties = ['winter_barley_59', 'winter_barley_60', 'winter_barley_61', 'winter_barley_62','spring_barley_63', 'spring_barley_64', 'spring_barley_65', 'spring_barley_66']
+    # for year in YEARS:
+    #     combine_crop_maps(year, varieties, output_tag='barley/combined_barley')
