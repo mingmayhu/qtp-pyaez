@@ -51,42 +51,174 @@ CROPS = [
     #     'terrain_crop_group': 'annuals 1',
     #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
     # },
-    {
-        'crop_name'      : 'winter_barley_61',
-        'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
-        'terrain_crop_group': 'annuals 1',
+    # {
+    #     'crop_name'      : 'winter_barley_61',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    # },
+    # {
+    #     'crop_name'      : 'winter_barley_62',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    # },
+    #     {
+    #     'crop_name'      : 'spring_barley_63',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 12],
+    # },
+    #         {
+    #     'crop_name'      : 'spring_barley_64',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 12],
+    # },
+    #         {
+    #     'crop_name'      : 'spring_barley_65',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 12],
+    # },
+    #         {
+    #     'crop_name'      : 'spring_barley_66',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 12],
+    # }
+    #     {
+    #     'crop_name'      : 'winter_wheat_1',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/wheat_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    # },
+    #     {
+    #     'crop_name'      : 'winter_wheat_2',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/wheat_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    # },
+    #     {
+    #     'crop_name'      : 'winter_wheat_3',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/wheat_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    # },
+    #     {
+    #     'crop_name'      : 'winter_wheat_4',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/wheat_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    # },
+    #     {
+    #     'crop_name'      : 'spring_wheat_5',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/wheat_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 12],
+    # },
+    #         {
+    #     'crop_name'      : 'spring_wheat_6',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/wheat_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 12],
+    # },
+    #         {
+    #     'crop_name'      : 'spring_wheat_7',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/wheat_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 12],
+    # },
+    #         {
+    #     'crop_name'      : 'spring_wheat_8',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/wheat_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 12],
+    # },
+    #         {
+    #     'crop_name'      : 'spring_wheat_9',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/wheat_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 12],
+    # },
+                {
+        'crop_name'      : 'silage_maize_53',
+        'soil_rain_excel': r'./data_input/soil_inputs/silage_maize_soil_reduction.xlsx',
+        'terrain_crop_group': 'annuals 2',
+        'no_t_climate'   : [9, 10, 11, 12],
+    },
+                    {
+        'crop_name'      : 'silage_maize_54',
+        'soil_rain_excel': r'./data_input/soil_inputs/silage_maize_soil_reduction.xlsx',
+        'terrain_crop_group': 'annuals 2',
+        'no_t_climate'   : [9, 10, 11, 12],
+    },
+                    {
+        'crop_name'      : 'silage_maize_55',
+        'soil_rain_excel': r'./data_input/soil_inputs/silage_maize_soil_reduction.xlsx',
+        'terrain_crop_group': 'annuals 2',
+        'no_t_climate'   : [9, 10, 11, 12],
+    },
+                    {
+        'crop_name'      : 'silage_maize_56',
+        'soil_rain_excel': r'./data_input/soil_inputs/silage_maize_soil_reduction.xlsx',
+        'terrain_crop_group': 'annuals 2',
+        'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    },
+                        {
+        'crop_name'      : 'silage_maize_57',
+        'soil_rain_excel': r'./data_input/soil_inputs/silage_maize_soil_reduction.xlsx',
+        'terrain_crop_group': 'annuals 2',
+        'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    },
+                        {
+        'crop_name'      : 'silage_maize_58',
+        'soil_rain_excel': r'./data_input/soil_inputs/silage_maize_soil_reduction.xlsx',
+        'terrain_crop_group': 'annuals 2',
         'no_t_climate'   : [1, 2, 9, 10, 11, 12],
     },
     {
-        'crop_name'      : 'winter_barley_62',
-        'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
-        'terrain_crop_group': 'annuals 1',
-        'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+        'crop_name'      : 'white_potato_135',
+        'soil_rain_excel': r'./data_input/soil_inputs/white_potato_soil_reduction.xlsx',
+        'terrain_crop_group': 'annuals 2',
+        'no_t_climate'   : [12],
     },
         {
-        'crop_name'      : 'spring_barley_63',
-        'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
-        'terrain_crop_group': 'annuals 1',
-        'no_t_climate'   : [1, 2, 12],
+        'crop_name'      : 'white_potato_136',
+        'soil_rain_excel': r'./data_input/soil_inputs/white_potato_soil_reduction.xlsx',
+        'terrain_crop_group': 'annuals 2',
+        'no_t_climate'   : [12],
+    },
+        {
+        'crop_name'      : 'white_potato_137',
+        'soil_rain_excel': r'./data_input/soil_inputs/white_potato_soil_reduction.xlsx',
+        'terrain_crop_group': 'annuals 2',
+        'no_t_climate'   : [12],
     },
             {
-        'crop_name'      : 'spring_barley_64',
-        'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
-        'terrain_crop_group': 'annuals 1',
-        'no_t_climate'   : [1, 2, 12],
+        'crop_name'      : 'white_potato_138',
+        'soil_rain_excel': r'./data_input/soil_inputs/white_potato_soil_reduction.xlsx',
+        'terrain_crop_group': 'annuals 2',
+        'no_t_climate'   : [1, 12],
     },
-            {
-        'crop_name'      : 'spring_barley_65',
-        'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
-        'terrain_crop_group': 'annuals 1',
-        'no_t_climate'   : [1, 2, 12],
+                {
+        'crop_name'      : 'white_potato_139',
+        'soil_rain_excel': r'./data_input/soil_inputs/white_potato_soil_reduction.xlsx',
+        'terrain_crop_group': 'annuals 2',
+        'no_t_climate'   : [1, 12],
     },
-            {
-        'crop_name'      : 'spring_barley_66',
-        'soil_rain_excel': r'./data_input/soil_inputs/barley_soil_reduction.xlsx',
-        'terrain_crop_group': 'annuals 1',
-        'no_t_climate'   : [1, 2, 12],
-    }
+                {
+        'crop_name'      : 'white_potato_140',
+        'soil_rain_excel': r'./data_input/soil_inputs/white_potato_soil_reduction.xlsx',
+        'terrain_crop_group': 'annuals 2',
+        'no_t_climate'   : [1, 12],
+    },
+                {
+        'crop_name'      : 'white_potato_141',
+        'soil_rain_excel': r'./data_input/soil_inputs/white_potato_soil_reduction.xlsx',
+        'terrain_crop_group': 'annuals 2',
+        'no_t_climate'   : [1, 12],
+    },
 ]
 
 # --- Shared input paths ------------------------------------------------------
@@ -498,14 +630,12 @@ def plot_final_classification(crop):
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(n_cols * 4, n_rows * 3.5))
     axes = axes.flatten()
 
+    tag = RUN_TAG
     for i, year in enumerate(YEARS):
-        if RUN_TAG:
-            if year in range(1979, 1999):
-                tag = ''
-            else:
-                tag = RUN_TAG
+        if NO_THAW_BASELINE_RUN and year in range(1979, 1998):
+            tag = ''
 
-        path = f'./data_output/final_classification{tag}/{crop}/{year}_final_yield_class{tag}.tif'
+        path = f'./data_output/final_classification{tag}/{crop}/{year}_final_yield_class.tif'
         ds = gdal.Open(path)
         if ds is None:
             axes[i].set_title(f'{year}\n(missing)', fontsize=8)
@@ -529,13 +659,18 @@ def plot_final_classification(crop):
     print(f'  ✓ All-years classification plot saved to {out_path}')
 
 def combine_crop_maps(year, varieties, output_tag=None):
-    out_dir = f'./data_output/final_classification/{output_tag}'
+    out_dir = f'./data_output/final_classification{RUN_TAG}/{output_tag}'
     os.makedirs(out_dir, exist_ok=True)
 
     stacked = []
     for variety in varieties:
         # Load raw yield from module 5, NOT the classified tif
-        path = f'./data_output/module5/{variety}/{year}/yield_terrain.tif'
+        tag = RUN_TAG
+        if year in range(1979, 1999):
+            if RUN_TAG:
+                tag = ''
+
+        path = f'./data_output/module5{tag}/{variety}/{year}/yield_terrain.tif'
         if not os.path.exists(path):
             print(f"    ⚠ Missing yield map for {variety} in {year} — skipping.")
             continue
@@ -713,9 +848,10 @@ def run_from_module4():
 
 if __name__ == '__main__':
     # run_from_module4()
-    #main()
+    # main()
     # run_all_module1()
-    plot_final_classification("winter_barley_59")
-    # varieties = ['winter_barley_59', 'winter_barley_60', 'winter_barley_61', 'winter_barley_62','spring_barley_63', 'spring_barley_64', 'spring_barley_65', 'spring_barley_66']
-    # for year in YEARS:
-    #     combine_crop_maps(year, varieties, output_tag='barley/combined_barley')
+    varieties = ['white_potato_135', 'white_potato_136', 'white_potato_137', 'white_potato_138',
+                 'white_potato_139', 'white_potato_140', 'white_potato_141']
+    for year in YEARS:
+        combine_crop_maps(year, varieties, output_tag='combined_white_potato')
+    plot_final_classification("combined_white_potato")
