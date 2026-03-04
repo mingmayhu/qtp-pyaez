@@ -632,8 +632,7 @@ def plot_final_classification(crop):
 
     tag = RUN_TAG
     for i, year in enumerate(YEARS):
-        if NO_THAW_BASELINE_RUN and year in range(1979, 1998):
-            tag = ''
+        tag = '' if (NO_THAW_BASELINE_RUN and year < 1999) else RUN_TAG
 
         path = f'./data_output/final_classification{tag}/{crop}/{year}_final_yield_class.tif'
         ds = gdal.Open(path)
