@@ -177,48 +177,48 @@ CROPS = [
         'terrain_crop_group': 'annuals 2',
         'no_t_climate'   : [1, 2, 9, 10, 11, 12],
     },
-    {
-        'crop_name'      : 'white_potato_135',
-        'soil_rain_excel': r'./data_input/soil_inputs/white_potato_soil_reduction.xlsx',
-        'terrain_crop_group': 'annuals 2',
-        'no_t_climate'   : [12],
-    },
-        {
-        'crop_name'      : 'white_potato_136',
-        'soil_rain_excel': r'./data_input/soil_inputs/white_potato_soil_reduction.xlsx',
-        'terrain_crop_group': 'annuals 2',
-        'no_t_climate'   : [12],
-    },
-        {
-        'crop_name'      : 'white_potato_137',
-        'soil_rain_excel': r'./data_input/soil_inputs/white_potato_soil_reduction.xlsx',
-        'terrain_crop_group': 'annuals 2',
-        'no_t_climate'   : [12],
-    },
-            {
-        'crop_name'      : 'white_potato_138',
-        'soil_rain_excel': r'./data_input/soil_inputs/white_potato_soil_reduction.xlsx',
-        'terrain_crop_group': 'annuals 2',
-        'no_t_climate'   : [1, 12],
-    },
-                {
-        'crop_name'      : 'white_potato_139',
-        'soil_rain_excel': r'./data_input/soil_inputs/white_potato_soil_reduction.xlsx',
-        'terrain_crop_group': 'annuals 2',
-        'no_t_climate'   : [1, 12],
-    },
-                {
-        'crop_name'      : 'white_potato_140',
-        'soil_rain_excel': r'./data_input/soil_inputs/white_potato_soil_reduction.xlsx',
-        'terrain_crop_group': 'annuals 2',
-        'no_t_climate'   : [1, 12],
-    },
-                {
-        'crop_name'      : 'white_potato_141',
-        'soil_rain_excel': r'./data_input/soil_inputs/white_potato_soil_reduction.xlsx',
-        'terrain_crop_group': 'annuals 2',
-        'no_t_climate'   : [1, 12],
-    },
+    # {
+    #     'crop_name'      : 'white_potato_135',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/white_potato_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [12],
+    # },
+    #     {
+    #     'crop_name'      : 'white_potato_136',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/white_potato_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [12],
+    # },
+    #     {
+    #     'crop_name'      : 'white_potato_137',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/white_potato_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [12],
+    # },
+    #         {
+    #     'crop_name'      : 'white_potato_138',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/white_potato_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [1, 12],
+    # },
+    #             {
+    #     'crop_name'      : 'white_potato_139',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/white_potato_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [1, 12],
+    # },
+    #             {
+    #     'crop_name'      : 'white_potato_140',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/white_potato_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [1, 12],
+    # },
+    #             {
+    #     'crop_name'      : 'white_potato_141',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/white_potato_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [1, 12],
+    # },
 ]
 
 # --- Shared input paths ------------------------------------------------------
@@ -850,8 +850,8 @@ if __name__ == '__main__':
     # run_from_module4()
     # main()
     # run_all_module1()
-    varieties = ['white_potato_135', 'white_potato_136', 'white_potato_137', 'white_potato_138',
-                 'white_potato_139', 'white_potato_140', 'white_potato_141']
-    for year in YEARS:
-        combine_crop_maps(year, varieties, output_tag='combined_white_potato')
-    plot_final_classification("combined_white_potato")
+    # varieties = ['silage_maize_53', 'silage_maize_54', 'silage_maize_55', 'silage_maize_56', 'silage_maize_57',
+    #              'silage_maize_58']
+    # for year in YEARS:
+    #     combine_crop_maps(year, varieties, output_tag='combined_silage_maize')
+    plot_final_classification("combined_silage_maize")
