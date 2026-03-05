@@ -719,11 +719,11 @@ def plot_final_classification(crop):
 
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(n_cols * 4, n_rows * 3.5))
     axes = axes.flatten()
+    TARGET_EXTENT = [93.663346096, 102.963346096, 35.821391739, 39.721391739]
 
-    tag = RUN_TAG
-    tag = '' if (NO_THAW_BASELINE_RUN and year < 1999) else RUN_TAG
 
     for i, year in enumerate(YEARS):
+        tag = '' if (NO_THAW_BASELINE_RUN and year < 1999) else RUN_TAG
         path = f'./data_output/final_classification{tag}/{crop}/{year}_final_yield_class.tif'
         ds = gdal.Open(path)
         if ds is None:
@@ -731,11 +731,15 @@ def plot_final_classification(crop):
             axes[i].axis('off')
             continue
         arr = ds.ReadAsArray().astype(float)
-        arr[arr < 0] = np.nan
-        im = axes[i].imshow(arr, cmap=plt.get_cmap('tab10', 6), vmin=0, vmax=5)
+        mask_ds = gdal.Open(MASK_PATH)
+        mask = mask_ds.ReadAsArray().astype(float)
+        arr[arr < 0] = 0          # treat negatives as class 0
+        arr[mask == 0] = np.nan   # mask outside region as NaN
+        im = axes[i].imshow(arr, cmap=plt.get_cmap('tab10', 6), vmin=0, vmax=5, extent=TARGET_EXTENT)
         axes[i].set_title(str(year), fontsize=9)
         axes[i].axis('off')
         plt.colorbar(im, ax=axes[i], shrink=0.8)
+
 
     for j in range(i + 1, len(axes)):
         axes[j].axis('off')
@@ -753,19 +757,19 @@ def combine_crop_maps(year, varieties, output_tag=None):
 
     # tag = RUN_TAG
     # tag = '' if (NO_THAW_BASELINE_RUN and year < 1999) else RUN_TAG
-    if year < 1999:
+    if NO_THAW_BASELINE_RUN and year < 1999:
         print(f"Skipping year {year} for combined map since it's not included in the no-thaw baseline run.")
         return
 
     stacked = []
     for variety in varieties:
         # Load raw yield from module 5, NOT the classified tif
-        path = f'./data_output/module5_{RUN_TAG}/{variety}/{year}/yield_terrain.tif'
+        path = f'./data_output/module5{RUN_TAG}/{variety}/{year}/yield_terrain.tif'
         if not os.path.exists(path):
             print(f"    ⚠ Missing yield map for {variety} in {year} — skipping.")
             continue
         arr = gdal.Open(path).ReadAsArray().astype(float)
-        arr[arr < 0] = np.nan
+        arr[arr < 0] = 0
         stacked.append(arr)
 
     stacked = np.stack(stacked, axis=0)       # (n_varieties, rows, cols)
@@ -940,7 +944,7 @@ if __name__ == '__main__':
     # run_from_module4()
     # main()
     # run_all_module1()
-    varieties = []
+    varieties = ["spring_oat_128", "spring_oat_129"]
     for year in YEARS:
-        combine_crop_maps(year, varieties, output_tag='combined_silage_maize')
-    plot_final_classification("combined_silage_maize")
+        combine_crop_maps(year, varieties, output_tag='combined_oat')
+    plot_final_classification("combined_oat")
