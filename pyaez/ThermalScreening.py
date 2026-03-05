@@ -265,7 +265,7 @@ class ThermalScreening(object):
             tsum0 = self.tsum0.copy()
             
             # Start TSUM screening
-            if tsum0 in range(self.LO, self.HO):
+            if self.LO <= tsum0 < self.HO:
                 f1 = 1
                 thermal_screening_f = np.min([f1, thermal_screening_f])
 

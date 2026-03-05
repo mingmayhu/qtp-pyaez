@@ -141,42 +141,42 @@ CROPS = [
     #     'terrain_crop_group': 'annuals 1',
     #     'no_t_climate'   : [1, 2, 12],
     # },
-                {
-        'crop_name'      : 'silage_maize_53',
-        'soil_rain_excel': r'./data_input/soil_inputs/silage_maize_soil_reduction.xlsx',
-        'terrain_crop_group': 'annuals 2',
-        'no_t_climate'   : [9, 10, 11, 12],
-    },
-                    {
-        'crop_name'      : 'silage_maize_54',
-        'soil_rain_excel': r'./data_input/soil_inputs/silage_maize_soil_reduction.xlsx',
-        'terrain_crop_group': 'annuals 2',
-        'no_t_climate'   : [9, 10, 11, 12],
-    },
-                    {
-        'crop_name'      : 'silage_maize_55',
-        'soil_rain_excel': r'./data_input/soil_inputs/silage_maize_soil_reduction.xlsx',
-        'terrain_crop_group': 'annuals 2',
-        'no_t_climate'   : [9, 10, 11, 12],
-    },
-                    {
-        'crop_name'      : 'silage_maize_56',
-        'soil_rain_excel': r'./data_input/soil_inputs/silage_maize_soil_reduction.xlsx',
-        'terrain_crop_group': 'annuals 2',
-        'no_t_climate'   : [1, 2, 9, 10, 11, 12],
-    },
-                        {
-        'crop_name'      : 'silage_maize_57',
-        'soil_rain_excel': r'./data_input/soil_inputs/silage_maize_soil_reduction.xlsx',
-        'terrain_crop_group': 'annuals 2',
-        'no_t_climate'   : [1, 2, 9, 10, 11, 12],
-    },
-                        {
-        'crop_name'      : 'silage_maize_58',
-        'soil_rain_excel': r'./data_input/soil_inputs/silage_maize_soil_reduction.xlsx',
-        'terrain_crop_group': 'annuals 2',
-        'no_t_climate'   : [1, 2, 9, 10, 11, 12],
-    },
+    #             {
+    #     'crop_name'      : 'silage_maize_53',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/silage_maize_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [9, 10, 11, 12],
+    # },
+    #                 {
+    #     'crop_name'      : 'silage_maize_54',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/silage_maize_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [9, 10, 11, 12],
+    # },
+    #                 {
+    #     'crop_name'      : 'silage_maize_55',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/silage_maize_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [9, 10, 11, 12],
+    # },
+    #                 {
+    #     'crop_name'      : 'silage_maize_56',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/silage_maize_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    # },
+    #                     {
+    #     'crop_name'      : 'silage_maize_57',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/silage_maize_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    # },
+    #                     {
+    #     'crop_name'      : 'silage_maize_58',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/silage_maize_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    # },
     # {
     #     'crop_name'      : 'white_potato_135',
     #     'soil_rain_excel': r'./data_input/soil_inputs/white_potato_soil_reduction.xlsx',
@@ -218,6 +218,96 @@ CROPS = [
     #     'soil_rain_excel': r'./data_input/soil_inputs/white_potato_soil_reduction.xlsx',
     #     'terrain_crop_group': 'annuals 2',
     #     'no_t_climate'   : [1, 12],
+    # },
+    # {
+    #     'crop_name'      : 'spring_oat_128',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/oat_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 12],
+    # },
+    #     {
+    #     'crop_name'      : 'spring_oat_129',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/oat_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 12],
+    # },
+    #     {
+    #     'crop_name'      : 'spring_oat_129',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/oat_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 12],
+    # },
+    #     {
+    #     'crop_name'      : 'spring_oat_129',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/oat_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 1',
+    #     'no_t_climate'   : [1, 2, 12],
+    # },
+    #         {
+    #     'crop_name'      : 'dry_pea_189',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/dry_pea_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [1, 9, 10, 11, 12],
+    # },
+    #             {
+    #     'crop_name'      : 'dry_pea_190',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/dry_pea_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [1, 9, 10, 11, 12],
+    # },
+    #             {
+    #     'crop_name'      : 'dry_pea_191',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/dry_pea_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [1, 9, 10, 11, 12],
+    # },
+    #                 {
+    #     'crop_name'      : 'winter_rape_216',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/rapeseed_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    # },
+    #                     {
+    #     'crop_name'      : 'winter_rape_217',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/rapeseed_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    # },
+    #                     {
+    #     'crop_name'      : 'winter_rape_218',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/rapeseed_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    # },
+    #                     {
+    #     'crop_name'      : 'winter_rape_219',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/rapeseed_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    # },
+    #                         {
+    #     'crop_name'      : 'spring_rape_220',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/rapeseed_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    # },
+    #                             {
+    #     'crop_name'      : 'spring_rape_221',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/rapeseed_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    # },
+    #                             {
+    #     'crop_name'      : 'spring_rape_222',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/rapeseed_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
+    # },
+    #                             {
+    #     'crop_name'      : 'spring_rape_223',
+    #     'soil_rain_excel': r'./data_input/soil_inputs/rapeseed_soil_reduction.xlsx',
+    #     'terrain_crop_group': 'annuals 2',
+    #     'no_t_climate'   : [1, 2, 9, 10, 11, 12],
     # },
 ]
 
@@ -631,9 +721,9 @@ def plot_final_classification(crop):
     axes = axes.flatten()
 
     tag = RUN_TAG
-    for i, year in enumerate(YEARS):
-        tag = '' if (NO_THAW_BASELINE_RUN and year < 1999) else RUN_TAG
+    tag = '' if (NO_THAW_BASELINE_RUN and year < 1999) else RUN_TAG
 
+    for i, year in enumerate(YEARS):
         path = f'./data_output/final_classification{tag}/{crop}/{year}_final_yield_class.tif'
         ds = gdal.Open(path)
         if ds is None:
@@ -661,15 +751,16 @@ def combine_crop_maps(year, varieties, output_tag=None):
     out_dir = f'./data_output/final_classification{RUN_TAG}/{output_tag}'
     os.makedirs(out_dir, exist_ok=True)
 
+    # tag = RUN_TAG
+    # tag = '' if (NO_THAW_BASELINE_RUN and year < 1999) else RUN_TAG
+    if year < 1999:
+        print(f"Skipping year {year} for combined map since it's not included in the no-thaw baseline run.")
+        return
+
     stacked = []
     for variety in varieties:
         # Load raw yield from module 5, NOT the classified tif
-        tag = RUN_TAG
-        if year in range(1979, 1999):
-            if RUN_TAG:
-                tag = ''
-
-        path = f'./data_output/module5{tag}/{variety}/{year}/yield_terrain.tif'
+        path = f'./data_output/module5_{RUN_TAG}/{variety}/{year}/yield_terrain.tif'
         if not os.path.exists(path):
             print(f"    ⚠ Missing yield map for {variety} in {year} — skipping.")
             continue
@@ -849,8 +940,7 @@ if __name__ == '__main__':
     # run_from_module4()
     # main()
     # run_all_module1()
-    # varieties = ['silage_maize_53', 'silage_maize_54', 'silage_maize_55', 'silage_maize_56', 'silage_maize_57',
-    #              'silage_maize_58']
-    # for year in YEARS:
-    #     combine_crop_maps(year, varieties, output_tag='combined_silage_maize')
+    varieties = []
+    for year in YEARS:
+        combine_crop_maps(year, varieties, output_tag='combined_silage_maize')
     plot_final_classification("combined_silage_maize")

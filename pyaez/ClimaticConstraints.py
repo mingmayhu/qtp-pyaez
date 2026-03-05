@@ -178,7 +178,7 @@ class ClimaticConstraints(object):
             lgp_agc= min(120, max(lgp, lgp_equv)) # correct
             return lgp_agc
         
-        elif lgp in range(121,210+1):
+        elif 121 <= lgp <= 210:
             lgp_agc = lgp # correct
             return lgp_agc
             

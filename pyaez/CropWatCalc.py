@@ -533,8 +533,8 @@ class CropWatCalc(object):
         # from object class
         hx = self.height
 
-        # for experiment
-        hx = 2.0
+        # # for experiment
+        # hx = 2.0
 
         # if canopy height is not enough, kc2 and kc3 will not be applied
         if hx <= 0.1:
@@ -604,7 +604,7 @@ class CropWatCalc(object):
             elif rhmn3 >80.:
                 rhmn3 = 80.
             else:
-                rhmn = 45.;
+                rhmn3 = 45.;
 
             
             u23 = wd3_sum/ (wd_d3.shape[0] * 86.4)
